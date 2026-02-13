@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Encodeur / Décodeur de SSSS | five_lives Github</title>
+    <link rel="stylesheet" href="./assets/css/header.css" />
+    <link rel="stylesheet" href="./assets/css/style.css" />
+    <script src="./assets/js/header.js" defer></script>
+    <style></style>
+  </head>
+  <body>
+    <div id="header"></div>
+    <div class="wrap">
+      <div class="card">
+        <div>
+          <h1>
+            Encodeur / Décodeur de SSSS (scratch-technoval's Secret Symmetrical
+            System)
+          </h1>
+          <p class="lead">
+            Encode et décode avec un système complexe composé de plusieurs
+            étapes d'encodage.
+          </p>
+        </div>
+        <div class="small">
+          Pas de bibliothèques externes · Fonctionne sans internet
+        </div>
+        <div
+          style="margin-top:18px;display:flex;justify-content:flex-end;gap:8px">
+          <button id="example">Insert example</button>
+          <button id="download">Download encoded (.txt)</button>
+        </div>
+      </div>
+
+      <main class="grid">
+        <section class="card">
+          <label for="plain">Plaintext</label>
+          <textarea
+            id="plain"
+            placeholder="Enter text to encode or paste decoded output here"></textarea>
+          <div class="controls">
+            <button id="encodeBtn" class="primary">Encode →</button>
+            <button id="clearPlain">Clear</button>
+            <button id="copyPlain">Copy</button>
+          </div>
+          <div class="footer">
+            <div class="note">
+              Text will be encoded as UTF-8 before processing.
+            </div>
+            <div id="plainStatus" class="status"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <label for="encoded">Encoded (base64)</label>
+          <textarea
+            id="encoded"
+            placeholder="Paste base64 payload here to decode"></textarea>
+          <div class="controls">
+            <button id="decodeBtn" class="revprimary">← Decode</button>
+            <button id="clearEncoded">Clear</button>
+            <button id="copyEncoded">Copy</button>
+          </div>
+          <div class="footer">
+            <div class="note">
+              Structure: base 64 de [1 caractère][caractère normal][nouvelle
+              ligne][HEX séparé par des virgule].
+            </div>
+            <div id="encodedStatus" class="status"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="footer"></div>
+
+    <script>
+      (() => {
+        const PRINTABLE_START = 32;
+        const PRINTABLE_COUNT = 95;
+        const printableChars = Array.from({length: PRINTABLE_COUNT}, (_,i)=>String.fromCharCode(PRINTABLE_START + i));
+
+        function randInt(min, max){
+          return Math.floor(Math.random()*(max-min+1))+min;
+        }
+
+        function shiftPrintable(ch, shift){
+          const code = ch.charCodeAt(0) - PRINTABLE_START;
+          return String.fromCharCode(((code + shift) % PRINTABLE_COUNT) + PRINTABLE_START);
+        }
+
+        function unshiftPrintable(ch, shift){
+          const code = ch.charCodeAt(0) - PRINTABLE_START;
+          return String.fromCharCode(((code - shift) % PRINTABLE_COUNT + PRINTABLE_COUNT) % PRINTABLE_COUNT + PRINTABLE_START);
+        }
+
+        function utf8ToBase64(u8){
+          let binary = '';
+          const chunk = 0x8000;
+          for (let i=0;i<u8.length;i+=chunk){
+            binary += String.fromCharCode.apply(null, u8.subarray(i, i+chunk));
+          }
+          return btoa(binary);
+        }
+        function base64ToUtf8(b64){
+          const binary = atob(b64);
+          const len = binary.length;
+          const bytes = new Uint8Array(len);
+          for (let i=0;i<len;i++) bytes[i] = binary.charCodeAt(i);
+          return bytes;
+        }
+
+        function encodeText(text){
+          const initial_shift = randInt(0, PRINTABLE_COUNT - 1);
+          const indicator_len = randInt(2,4);
+          let indicator_original = '';
+          for (let i=0;i<indicator_len;i++) indicator_original += printableChars[randInt(0, printableChars.length-1)];
+          const stored_indicator = indicator_original[0] + Array.from(indicator_original.slice(1)).map(c => shiftPrintable(c, initial_shift)).join('');
+          let total_shift = 0;
+          for (const c of indicator_original) total_shift += c.codePointAt(0);
+          const hexParts = [];
+          for (const ch of text) {
+            const shifted_value = ch.codePointAt(0) + total_shift;
+            hexParts.push(shifted_value.toString(16).toUpperCase());
+          }
+          const payloadStr = String.fromCharCode(initial_shift) + stored_indicator + "\n" + hexParts.join(",");
+          const encoder = new TextEncoder();
+          const u8 = encoder.encode(payloadStr);
+          return utf8ToBase64(u8);
+        }
+
+        function decodeText(b64){
+          try{
+            const bytes = base64ToUtf8(b64);
+            const decoder = new TextDecoder();
+            const decodedStr = decoder.decode(bytes);
+            if (decodedStr.length === 0) throw new Error("empty payload");
+            const initial_shift = decodedStr.charCodeAt(0);
+            const nl = decodedStr.indexOf("\n");
+            if (nl === -1) throw new Error("missing newline separator");
+            const stored_indicator = decodedStr.slice(1, nl);
+            if (stored_indicator.length === 0) throw new Error("missing indicator");
+            const indicator_original = stored_indicator[0] + Array.from(stored_indicator.slice(1)).map(c => unshiftPrintable(c, initial_shift)).join('');
+            let total_shift = 0;
+            for (const c of indicator_original) total_shift += c.codePointAt(0);
+            const hex_part = decodedStr.slice(nl+1).trim();
+            if (hex_part === "") return "";
+            const nums = hex_part.split(",").filter(x => x !== "").map(x => parseInt(x, 16));
+            const chars = nums.map(n => {
+              const code = n - total_shift;
+              if (code < 0 || code > 0x10FFFF) throw new Error("invalid codepoint");
+              return String.fromCodePoint(code);
+            });
+            return chars.join("");
+          }catch(e){
+            throw e;
+          }
+        }
+
+        const plainEl = document.getElementById("plain");
+        const encodedEl = document.getElementById("encoded");
+        const encodeBtn = document.getElementById("encodeBtn");
+        const decodeBtn = document.getElementById("decodeBtn");
+        const copyPlain = document.getElementById("copyPlain");
+        const copyEncoded = document.getElementById("copyEncoded");
+        const clearPlain = document.getElementById("clearPlain");
+        const clearEncoded = document.getElementById("clearEncoded");
+        const plainStatus = document.getElementById("plainStatus");
+        const encodedStatus = document.getElementById("encodedStatus");
+        const exampleBtn = document.getElementById("example");
+        const downloadBtn = document.getElementById("download");
+
+        function setStatus(el, msg, ok=true){
+          el.textContent = msg;
+          el.style.color = ok ? "" : "#ff7b7b";
+          setTimeout(()=>{ if (el.textContent === msg) el.textContent = "" }, 5000);
+        }
+
+        encodeBtn.addEventListener("click", ()=>{
+          try{
+            const txt = plainEl.value || "";
+            const out = encodeText(txt);
+            encodedEl.value = out;
+            setStatus(plainStatus, "Encoded ✓");
+          }catch(err){
+            setStatus(plainStatus, "Error: " + (err.message || err), false);
+          }
+        });
+
+        decodeBtn.addEventListener("click", ()=>{
+          try{
+            const b64 = encodedEl.value.trim();
+            if (!b64) { setStatus(encodedStatus, "No input", false); return; }
+            const out = decodeText(b64);
+            plainEl.value = out;
+            setStatus(encodedStatus, "Decoded ✓");
+          }catch(err){
+            setStatus(encodedStatus, "Error: " + (err.message || err), false);
+          }
+        });
+
+        copyPlain.addEventListener("click", async ()=>{
+          try {
+            await navigator.clipboard.writeText(plainEl.value || "");
+            setStatus(plainStatus, "Copied");
+          } catch(e){
+            setStatus(plainStatus, "Copy failed", false);
+          }
+        });
+        copyEncoded.addEventListener("click", async ()=>{
+          try {
+            await navigator.clipboard.writeText(encodedEl.value || "");
+            setStatus(encodedStatus, "Copied");
+          } catch(e){
+            setStatus(encodedStatus, "Copy failed", false);
+          }
+        });
+
+        clearPlain.addEventListener("click", ()=> plainEl.value = "");
+        clearEncoded.addEventListener("click", ()=> encodedEl.value = "");
+
+        exampleBtn.addEventListener("click", ()=>{
+          plainEl.value = "Hello — exemple: 1234 € ☺";
+          setStatus(plainStatus, "Example inserted");
+        });
+
+        downloadBtn.addEventListener("click", ()=>{
+          const data = encodedEl.value;
+          if (!data) { setStatus(encodedStatus, "Nothing to download", false); return; }
+          const blob = new Blob([data], {type:"text/plain;charset=utf-8"});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "encoded.txt";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          setStatus(encodedStatus, "Downloaded");
+        });
+
+        // keyboard shortcuts
+        document.addEventListener("keydown", (e)=>{
+          if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === "e"){ e.preventDefault(); encodeBtn.click(); }
+          if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === "d"){ e.preventDefault(); decodeBtn.click(); }
+        });
+
+      })();
+    </script>
+  </body>
+</html>
