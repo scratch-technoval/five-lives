@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Encodeur / Décodeur de Morse | five_lives Github</title>
+    <link rel="stylesheet" href="./assets/css/header.css" />
+    <link rel="stylesheet" href="./assets/css/style.css" />
+    <script src="./assets/js/header.js" defer></script>
+  </head>
+  <body>
+    <div id="header"></div>
+    <div class="wrap">
+      <div class="card">
+        <div>
+          <h1>Encodeur / Décodeur de Morse</h1>
+          <p class="lead">Morse classique et officiel</p>
+        </div>
+        <div class="small">
+          Pas de bibliothèques externes · Fonctionne sans internet
+        </div>
+        <div
+          style="margin-top:18px;display:flex;justify-content:flex-end;gap:8px">
+          <button id="example">Insert example</button>
+          <button id="download">Download encoded (.txt)</button>
+        </div>
+      </div>
+
+      <main class="grid">
+        <section class="card">
+          <label for="plain">Plaintext</label>
+          <textarea
+            id="plain"
+            placeholder="Enter text to encode or paste decoded output here"></textarea>
+          <div class="controls">
+            <button id="encodeBtn" class="primary">Encode →</button>
+            <button id="clearPlain">Clear</button>
+            <button id="copyPlain">Copy</button>
+          </div>
+          <div class="footer">
+            <div class="note">
+              Merci d'utiliser des caractères alphanumériques.
+            </div>
+            <div id="plainStatus" class="status"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <label for="encoded">Encoded Morse</label>
+          <textarea
+            id="encoded"
+            placeholder="Paste morse payload here to decode"></textarea>
+          <div class="controls">
+            <button id="decodeBtn" class="revprimary">← Decode</button>
+            <button id="clearEncoded">Clear</button>
+            <button id="copyEncoded">Copy</button>
+          </div>
+          <div class="footer">
+            <div class="note">Slash or three space for space.</div>
+            <div id="encodedStatus" class="status"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="card">
+      <div>
+        <h1>Comment fonctionne le morse ?</h1>
+      </div>
+      <p>
+        Le code Morse est un système de communication utilisant des
+        <strong>points (.)</strong> et des <strong>traits (-)</strong> pour
+        représenter lettres, chiffres et symboles. Inventé en 1840, il est
+        encore utilisé en radioamateur et en navigation.
+      </p>
+      <div class="grid">
+        <table id="morseTable1"></table>
+        <table id="morseTable2"></table>
+        <table id="morseTable3"></table>
+        <table id="morseTable4"></table>
+      </div>
+    </div>
+
+    <div id="footer"></div>
+
+    <script>
+      (() => {
+      const plainEl = document.getElementById("plain");
+      const encodedEl = document.getElementById("encoded");
+      const encodeBtn = document.getElementById("encodeBtn");
+      const decodeBtn = document.getElementById("decodeBtn");
+      const copyPlain = document.getElementById("copyPlain");
+      const copyEncoded = document.getElementById("copyEncoded");
+      const clearPlain = document.getElementById("clearPlain");
+      const clearEncoded = document.getElementById("clearEncoded");
+      const plainStatus = document.getElementById("plainStatus");
+      const encodedStatus = document.getElementById("encodedStatus");
+      const exampleBtn = document.getElementById("example");
+      const downloadBtn = document.getElementById("download");
+
+      const morseTable = {
+      "A": ".-",
+      "B": "-...",
+      "C": "-.-.",
+      "D": "-..",
+      "E": ".",
+      "F": "..-.",
+      "G": "--.",
+      "H": "....",
+      "I": "..",
+      "J": ".---",
+      "K": "-.-",
+      "L": ".-..",
+      "M": "--",
+      "N": "-.",
+      "O": "---",
+      "P": ".--.",
+      "Q": "--.-",
+      "R": ".-.",
+      "S": "...",
+      "T": "-",
+      "U": "..-",
+      "V": "...-",
+      "W": ".--",
+      "X": "-..-",
+      "Y": "-.--",
+      "Z": "--..",
+      "0": "-----",
+      "1": ".----",
+      "2": "..---",
+      "3": "...--",
+      "4": "....-",
+      "5": ".....",
+      "6": "-....",
+      "7": "--...",
+      "8": "---..",
+      "9": "----.",
+      ".": ".-.-.-",
+      ",": "--..--",
+      "?": "..--..",
+      "'": ".----.",
+      "!": "-.-.--",
+      "/": "-..-.",
+      "(": "-.--.",
+      ")": "-.--.-",
+      "&": ".-...",
+      ":": "---...",
+      ";": "-.-.-.",
+      "=": "-...-",
+      "+": ".-.-.",
+      "-": "-....-",
+      "_": "..--.-",
+      "\"": ".-..-.",
+      "$": "...-..-",
+      "@": ".--.-.",
+      " ": "\\"
+      };
+
+      function generateMorseTable(data, tableID) {
+      const table = document.getElementById(`morseTable${tableID}`);
+      const keys = Object.keys(data);
+      const quart = Math.ceil(keys.length / 4);
+      let startIndex = (tableID - 1) * quart;
+      let endIndex = tableID * quart;
+
+      // Créer l'en-tête du tableau
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+
+      const keyHeader = document.createElement("th");
+      keyHeader.textContent = "Élément";
+
+      const valueHeader = document.createElement("th");
+      valueHeader.textContent = "Morse";
+
+      headerRow.appendChild(keyHeader);
+      headerRow.appendChild(valueHeader);
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      // Créer le corps du tableau
+      const tbody = document.createElement("tbody");
+
+      // Parcourir uniquement le quart des données correspondant à tableID
+      const sliceKeys = keys.slice(startIndex, endIndex);
+      for (const key of sliceKeys) {
+      const row = document.createElement("tr");
+
+      const keyCell = document.createElement("td");
+      keyCell.textContent = key;
+
+      const valueCell = document.createElement("td");
+      valueCell.textContent = data[key];
+
+      row.appendChild(keyCell);
+      row.appendChild(valueCell);
+      tbody.appendChild(row);
+      }
+
+      table.appendChild(tbody);
+      }
+
+
+      generateMorseTable(morseTable, 1);
+      generateMorseTable(morseTable, 2);
+      generateMorseTable(morseTable, 3);
+      generateMorseTable(morseTable, 4);
+
+      // Inverse le dictionnaire pour le décodage
+      const reverseMorseTable = {};
+      for (const [key, value] of Object.entries(morseTable)) {
+      reverseMorseTable[value] = key;
+      }
+
+      function encodeText(text) {
+      let encoded = "";
+      text = text.toUpperCase();
+      for (let i = 0; i < text.length; i++) {
+      if (morseTable[text[i]]) {
+      encoded += morseTable[text[i]] + " ";
+      } else {
+      encoded += " ";
+      }
+      }
+      return encoded.trim();
+      }
+
+      function decodeText(morse) {
+      let decoded = "";
+      const words = morse.split("   ");
+      for (const word of words) {
+      const letters = word.split(" ");
+      for (const letter of letters) {
+      if (reverseMorseTable[letter]) {
+      decoded += reverseMorseTable[letter];
+      } else if (letter === "/") {
+      decoded += " ";
+      }
+      }
+      decoded += " ";
+      }
+      return decoded.trim();
+      }
+
+      function setStatus(el, msg, ok=true) {
+      el.textContent = msg;
+      el.style.color = ok ? "" : "#ff7b7b";
+      setTimeout(()=>{ if (el.textContent === msg) el.textContent = "" }, 5000);
+      }
+
+      encodeBtn.addEventListener("click", ()=>{
+      try {
+      const txt = plainEl.value || "";
+      const out = encodeText(txt);
+      encodedEl.value = out;
+      setStatus(plainStatus, "Encoded ✓");
+      } catch(err) {
+      setStatus(plainStatus, "Error: " + (err.message || err), false);
+      }
+      });
+
+      decodeBtn.addEventListener("click", ()=>{
+      try {
+      const morse = encodedEl.value.trim();
+      if (!morse) { setStatus(encodedStatus, "No input", false); return; }
+      const out = decodeText(morse);
+      plainEl.value = out;
+      setStatus(encodedStatus, "Decoded ✓");
+      } catch(err) {
+      setStatus(encodedStatus, "Error: " + (err.message || err), false);
+      }
+      });
+
+      copyPlain.addEventListener("click", async ()=>{
+      try {
+      await navigator.clipboard.writeText(plainEl.value || "");
+      setStatus(plainStatus, "Copied");
+      } catch(e) {
+      setStatus(plainStatus, "Copy failed", false);
+      }
+      });
+      copyEncoded.addEventListener("click", async ()=>{
+      try {
+      await navigator.clipboard.writeText(encodedEl.value || "");
+      setStatus(encodedStatus, "Copied");
+      } catch(e) {
+      setStatus(encodedStatus, "Copy failed", false);
+      }
+      });
+
+      clearPlain.addEventListener("click", ()=> plainEl.value = "");
+      clearEncoded.addEventListener("click", ()=> encodedEl.value = "");
+
+      exampleBtn.addEventListener("click", ()=>{
+      plainEl.value = "abc1e de df89 k";
+      setStatus(plainStatus, "Example inserted");
+      });
+
+      downloadBtn.addEventListener("click", ()=>{
+      const data = encodedEl.value;
+      if (!data) { setStatus(encodedStatus, "Nothing to download", false); return; }
+      const blob = new Blob([data], {type:"text/plain;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "encoded.txt";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setStatus(encodedStatus, "Downloaded");
+      });
+
+      // keyboard shortcuts
+      document.addEventListener("keydown", (e)=>{
+      if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === "e"){ e.preventDefault(); encodeBtn.click(); }
+      if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === "d"){ e.preventDefault(); decodeBtn.click(); }
+      });
+
+      })();
+    </script>
+  </body>
+</html>
