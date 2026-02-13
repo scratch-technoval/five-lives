@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Mon Portfolio | five_lives Github</title>
+
+    <link rel="stylesheet" href="./assets/css/header.css" />
+    <link rel="stylesheet" href="./assets/css/style.css" />
+    <script src="./assets/js/header.js" defer></script>
+
+    <style>
+      section{
+        display:flex;
+        align-items:center;
+        gap:10px;
+      }
+      .tempo{
+        padding:6px 10px;
+        border-radius:8px;
+        font-weight:600;
+        font-size:13px;
+      }
+      .tempo-stats{
+        list-style:none;
+        padding:0;
+        margin-top:16px;
+        color:#9aa4b2;
+        font-size:14px;
+      }
+
+      .tempo-stats li{
+        margin-bottom:6px;
+      }
+
+      .BLEU{ background:#2563eb; color:white; }
+      .BLANC{ background:#e5e7eb; color:#111827; }
+      .ROUGE{ background:#dc2626; color:white; }
+      .UNKNOWN{ background:var(--bg); color:#9ca3af; }
+    </style>
+  </head>
+
+  <body>
+    <div id="header"></div>
+
+    <main>
+      <h1>Couleur EDF Tempo</h1>
+      <p>
+        Couleur EDF Tempo, utilisation de l'API
+        <a href="https://www.api-couleur-tempo.fr" target="_blank">
+          https://www.api-couleur-tempo.fr </a
+        >.
+      </p>
+
+      <br />
+
+      <section>
+        <strong>Hier :</strong>
+        <div id="yesterday" class="tempo UNKNOWN">chargement…</div>
+      </section>
+
+      <br />
+
+      <section>
+        <strong>Aujourd’hui :</strong>
+        <div id="today" class="tempo UNKNOWN">chargement…</div>
+      </section>
+
+      <br />
+
+      <section>
+        <strong>Demain :</strong>
+        <div id="tomorrow" class="tempo UNKNOWN">chargement…</div>
+      </section>
+      <section>
+        <h2>Statistiques Tempo</h2>
+
+        <ul class="tempo-stats">
+          <li id="red">Rouges : chargement…</li>
+          <li id="white">Blancs : chargement…</li>
+          <li id="blue">Bleus : chargement…</li>
+        </ul>
+      </section>
+    </main>
+
+    <div id="footer"></div>
+
+    <script>
+      const API = "https://www.api-couleur-tempo.fr/api/";
+
+      function formatDate(d){
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
+      function normalizeColor(value){
+        if (!value) return "UNKNOWN";
+
+        value = value
+          .toUpperCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+
+        return ["BLEU", "BLANC", "ROUGE"].includes(value)
+          ? value
+          : "UNKNOWN";
+      }
+
+      async function fetchColor(endpoint, elementId){
+        try{
+          const r = await fetch(API + "jourTempo/" + endpoint);
+          const j = await r.json();
+
+          const el = document.getElementById(elementId);
+          const color = j.libCouleur || "Inconnu";
+          const normalized = normalizeColor(color);
+
+          el.textContent = color;
+          el.className = "tempo " + normalized;
+
+        }catch{
+          const el = document.getElementById(elementId);
+          el.textContent = "Inconnu";
+          el.className = "tempo UNKNOWN";
+        }
+      }
+
+      async function fetchStats(){
+        try{
+          const r = await fetch(API + "stats");
+          const s = await r.json();
+
+          const redRest = Number(s.joursRougesRestants);
+          const redUsed = Number(s.joursRougesConsommes);
+          const redTotal = redRest + redUsed;
+
+          const whiteRest = Number(s.joursBlancsRestants);
+          const whiteUsed = Number(s.joursBlancsConsommes);
+          const whiteTotal = whiteRest + whiteUsed;
+
+          const blueRest = Number(s.joursBleusRestants);
+          const blueUsed = Number(s.joursBleusConsommes);
+          const blueTotal = blueRest + blueUsed;
+
+          document.getElementById("red").textContent =
+            `Rouges : ${redRest} restants et ${redUsed} consommés sur ${redTotal}`;
+
+          document.getElementById("white").textContent =
+            `Blancs : ${whiteRest} restants et ${whiteUsed} consommés sur ${whiteTotal}`;
+
+          document.getElementById("blue").textContent =
+            `Bleus : ${blueRest} restants et ${blueUsed} consommés sur ${blueTotal}`;
+        }catch{
+          document.getElementById("red").textContent = "Rouges : Inconnu";
+          document.getElementById("white").textContent = "Blancs : Inconnu";
+          document.getElementById("blue").textContent = "Bleus : Inconnu";
+        }
+      }
+
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+
+      fetchColor(formatDate(yesterday), "yesterday");
+      fetchColor("today", "today");
+      fetchColor("tomorrow", "tomorrow");
+      fetchStats();
+    </script>
+  </body>
+</html>
