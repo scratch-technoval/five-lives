@@ -1,0 +1,238 @@
+:root {
+  --accent: #0b69ff;
+  --accent-transluent: #0b69ff1f;
+  --accent-muted: #3e78ce;
+  --muted: #9aa4b2;
+  --color: #e6eef6;
+  --radius: 14px;
+  --border: rgba(255, 255, 255, 0.06);
+  --shadow: 0 6px 24px rgba(2, 6, 23, 0.6);
+  --input-bg: rgba(255, 255, 255, 0.01);
+  --glass: rgba(255, 255, 255, 0.03);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f8fafc;
+    --bg-transluent: #f8fafc88;
+    --card: #ffffff;
+    --color: #1e293b;
+    --muted: #64748b;
+    --border: rgba(0, 0, 0, 0.08);
+    --shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+    --input-bg: rgba(0, 0, 0, 0.02);
+    --glass: rgba(0, 0, 0, 0.02);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #071025;
+    --bg-transluent: #07102588;
+    --card: #0b1220;
+    --color: #e6eef6;
+    --muted: #9aa4b2;
+    --border: rgba(255, 255, 255, 0.06);
+    --shadow: 0 6px 24px rgba(2, 6, 23, 0.6);
+    --input-bg: rgba(255, 255, 255, 0.01);
+    --glass: rgba(255, 255, 255, 0.03);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--color);
+  font-family: Inter, system-ui, sans-serif;
+  min-height: 100vh;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+
+main {
+  margin: 0 auto;
+  padding: 100px 20px 60px;
+  max-width: 1000px;
+}
+
+.wrap {
+  width: 100%;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  transition:
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+  background-image: linear-gradient(180deg, var(--glass), transparent);
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+
+textarea {
+  width: 100%;
+  min-height: 200px;
+  resize: vertical;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  outline: none;
+  transition:
+    background 0.3s ease,
+    border 0.3s ease;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.14s ease;
+}
+
+button.primary {
+  background: linear-gradient(
+    90deg,
+    rgba(124, 58, 237, 0.14),
+    rgba(99, 102, 241, 0.08)
+  );
+  border: 1px solid rgba(124, 58, 237, 0.26);
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.08);
+  color: var(--color);
+}
+
+button.revprimary {
+  background: linear-gradient(
+    -90deg,
+    rgba(124, 58, 237, 0.14),
+    rgba(99, 102, 241, 0.08)
+  );
+  border: 1px solid rgba(124, 58, 237, 0.26);
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.08);
+  color: var(--color);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+.status {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.muted,
+#muted {
+  color: var(--muted);
+}
+
+section {
+  background-color: var(--card);
+  padding: 20px;
+  margin: 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 880px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+a {
+  color: var(--accent);
+  transition: all 0.14s ease;
+}
+
+a:hover {
+  color: var(--accent-muted);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 400px;
+  margin: 20px auto;
+}
+table th,
+table td {
+  border: 1px solid var(--border);
+  padding: 8px;
+  text-align: left;
+}
+table th {
+  background-color: var(--accent-transluent);
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background:
+      radial-gradient(
+        1200px 600px at 20% 10%,
+        rgba(248, 250, 252, 0.04),
+        transparent 60%
+      ),
+      linear-gradient(180deg, #081428 0%, #071025 50%, #061021 100%);
+    color: #e2e8f0;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background: linear-gradient(180deg, #f8fafc, #f1f5f9, #e2e8f0);
+  }
+}
+
+@media (max-width: 1000px) {
+  #importance-4 {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  #importance-3 {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  #importance-2 {
+    display: none;
+  }
+}
