@@ -3,320 +3,450 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Encodeur / Décodeur de Morse | five_lives Github</title>
+    <title>Journal | five_lives</title>
+    <style>
+      .entry, article { padding:12px 0; background-color: var(--accent-transluent); padding: 20px; margin: 10px; border-radius: 20px; }
+      .entry h3 { margin:0 0 6px; }
+      .controls { margin:8px 0; }
+      .full-article img, .list img { max-width:100px; max-height:100px; display:flex; margin-top:6px; }
+    </style>
     <link rel="stylesheet" href="./assets/css/header.css" />
     <link rel="stylesheet" href="./assets/css/style.css" />
     <script src="./assets/js/header.js" defer></script>
+    <link rel="shortcut icon" href="./assets/favicon.ico" type="image/x-icon">
   </head>
   <body>
     <div id="header"></div>
-    <div class="wrap">
-      <div class="card">
-        <div>
-          <h1>Encodeur / Décodeur de Morse</h1>
-          <p class="lead">Morse classique et officiel</p>
-        </div>
-        <div class="small">
-          Pas de bibliothèques externes · Fonctionne sans internet
-        </div>
-        <div
-          style="margin-top:18px;display:flex;justify-content:flex-end;gap:8px">
-          <button id="example">Insert example</button>
-          <button id="download">Download encoded (.txt)</button>
-        </div>
-      </div>
 
-      <main class="grid">
-        <section class="card">
-          <label for="plain">Plaintext</label>
-          <textarea
-            id="plain"
-            placeholder="Enter text to encode or paste decoded output here"></textarea>
-          <div class="controls">
-            <button id="encodeBtn" class="primary">Encode →</button>
-            <button id="clearPlain">Clear</button>
-            <button id="copyPlain">Copy</button>
-          </div>
-          <div class="footer">
-            <div class="note">
-              Merci d'utiliser des caractères alphanumériques.
-            </div>
-            <div id="plainStatus" class="status"></div>
-          </div>
-        </section>
+    <main id="app">
+      <h1>
+        Journal
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24px"
+          fill="var(--color)"
+          viewBox="0 0 24 24">
+          <path
+            d="M20 3H4C2.89 3 2 3.89 2 5V19C2 20.11 2.89 21 4 21H20C21.11 21 22 20.11 22 19V5C22 3.89 21.11 3 20 3M5 7H10V13H5V7M19 17H5V15H19V17M19 13H12V11H19V13M19 9H12V7H19V9Z" />
+        </svg>
+      </h1>
 
-        <section class="card">
-          <label for="encoded">Encoded Morse</label>
-          <textarea
-            id="encoded"
-            placeholder="Paste morse payload here to decode"></textarea>
-          <div class="controls">
-            <button id="decodeBtn" class="revprimary">← Decode</button>
-            <button id="clearEncoded">Clear</button>
-            <button id="copyEncoded">Copy</button>
-          </div>
-          <div class="footer">
-            <div class="note">Slash or three space for space.</div>
-            <div id="encodedStatus" class="status"></div>
-          </div>
-        </section>
-      </main>
-    </div>
+      <section id="listView" style="display:none;">
+        <h2>Le plus récent</h2>
+        <div id="recent" class="list"></div>
+        <h2>Plus vieux</h2>
+        <div id="older" class="list"></div>
+      </section>
 
-    <div class="card">
-      <div>
-        <h1>Comment fonctionne le morse ?</h1>
-      </div>
-      <p>
-        Le code Morse est un système de communication utilisant des
-        <strong>points (.)</strong> et des <strong>traits (-)</strong> pour
-        représenter lettres, chiffres et symboles. Inventé en 1840, il est
-        encore utilisé en radioamateur et en navigation.
-      </p>
-      <div class="grid">
-        <table id="morseTable1"></table>
-        <table id="morseTable2"></table>
-        <table id="morseTable3"></table>
-        <table id="morseTable4"></table>
-      </div>
-    </div>
+      <section id="articleView" style="display:none;">
+        <div class="nav-links">
+          <a href="newspaper.html">← Retour à la liste</a>
+        </div>
+        <article id="article" class="full-article"></article>
+        <div id="articleNav" class="small"></div>
+      </section>
+
+      <section id="message" style="display:none;color:#b00;"></section>
+    </main>
 
     <div id="footer"></div>
 
     <script>
-      (() => {
-      const plainEl = document.getElementById("plain");
-      const encodedEl = document.getElementById("encoded");
-      const encodeBtn = document.getElementById("encodeBtn");
-      const decodeBtn = document.getElementById("decodeBtn");
-      const copyPlain = document.getElementById("copyPlain");
-      const copyEncoded = document.getElementById("copyEncoded");
-      const clearPlain = document.getElementById("clearPlain");
-      const clearEncoded = document.getElementById("clearEncoded");
-      const plainStatus = document.getElementById("plainStatus");
-      const encodedStatus = document.getElementById("encodedStatus");
-      const exampleBtn = document.getElementById("example");
-      const downloadBtn = document.getElementById("download");
+      // ---------- UTILITAIRES ----------
+      function qs() {
+        const q = {};
+        const s = location.search.replace(/^\?/, '');
+        if(!s) return q;
+        s.split('&').forEach(part => {
+          const [k,v] = part.split('=').map(decodeURIComponent);
+          if(k) q[k] = v || '';
+        });
+        return q;
+      }
 
-      const morseTable = {
-      "A": ".-",
-      "B": "-...",
-      "C": "-.-.",
-      "D": "-..",
-      "E": ".",
-      "F": "..-.",
-      "G": "--.",
-      "H": "....",
-      "I": "..",
-      "J": ".---",
-      "K": "-.-",
-      "L": ".-..",
-      "M": "--",
-      "N": "-.",
-      "O": "---",
-      "P": ".--.",
-      "Q": "--.-",
-      "R": ".-.",
-      "S": "...",
-      "T": "-",
-      "U": "..-",
-      "V": "...-",
-      "W": ".--",
-      "X": "-..-",
-      "Y": "-.--",
-      "Z": "--..",
-      "0": "-----",
-      "1": ".----",
-      "2": "..---",
-      "3": "...--",
-      "4": "....-",
-      "5": ".....",
-      "6": "-....",
-      "7": "--...",
-      "8": "---..",
-      "9": "----.",
-      ".": ".-.-.-",
-      ",": "--..--",
-      "?": "..--..",
-      "'": ".----.",
-      "!": "-.-.--",
-      "/": "-..-.",
-      "(": "-.--.",
-      ")": "-.--.-",
-      "&": ".-...",
-      ":": "---...",
-      ";": "-.-.-.",
-      "=": "-...-",
-      "+": ".-.-.",
-      "-": "-....-",
-      "_": "..--.-",
-      "\"": ".-..-.",
-      "$": "...-..-",
-      "@": ".--.-.",
-      " ": "\\"
+      // Autoriser seulement ces balises
+      const ALLOWED_TAGS = new Set(['H1','H2','H3','H4','H5','H6','P','A','IMG','UL','OL','LI','BLOCKQUOTE','CODE','HR']);
+      // Permettre seulement ces attributs par tag
+      const ALLOWED_ATTRS = {
+        'A': ['href','target','rel'],
+        'IMG': ['src','alt'],
+        'UL': [],
+        'OL': [],
+        'LI': [],
+        'BLOCKQUOTE': [],
+        'CODE': [],
+        'HR': []
       };
+      // Autoriser seulement ces protocoles pour href/src
+      const SAFE_URL_RE = /^(https?:\/\/|\/|mailto:)/i;
 
-      function generateMorseTable(data, tableID) {
-      const table = document.getElementById(`morseTable${tableID}`);
-      const keys = Object.keys(data);
-      const quart = Math.ceil(keys.length / 4);
-      let startIndex = (tableID - 1) * quart;
-      let endIndex = tableID * quart;
+      // Sanitize: construit un clone autorisé depuis un node
+      function sanitizeNode(node) {
+        if(node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.textContent);
+        if(node.nodeType !== Node.ELEMENT_NODE) return document.createDocumentFragment();
 
-      // Créer l'en-tête du tableau
-      const thead = document.createElement("thead");
-      const headerRow = document.createElement("tr");
+        const tag = node.tagName.toUpperCase();
+        if(!ALLOWED_TAGS.has(tag)) {
+          // pour tags non autorisés, on transforme en texte (conserve contenu texte)
+          const frag = document.createDocumentFragment();
+          Array.from(node.childNodes).forEach(ch => {
+            const s = sanitizeNode(ch);
+            if(s) frag.appendChild(s);
+          });
+          return frag;
+        }
 
-      const keyHeader = document.createElement("th");
-      keyHeader.textContent = "Élément";
-
-      const valueHeader = document.createElement("th");
-      valueHeader.textContent = "Morse";
-
-      headerRow.appendChild(keyHeader);
-      headerRow.appendChild(valueHeader);
-      thead.appendChild(headerRow);
-      table.appendChild(thead);
-
-      // Créer le corps du tableau
-      const tbody = document.createElement("tbody");
-
-      // Parcourir uniquement le quart des données correspondant à tableID
-      const sliceKeys = keys.slice(startIndex, endIndex);
-      for (const key of sliceKeys) {
-      const row = document.createElement("tr");
-
-      const keyCell = document.createElement("td");
-      keyCell.textContent = key;
-
-      const valueCell = document.createElement("td");
-      valueCell.textContent = data[key];
-
-      row.appendChild(keyCell);
-      row.appendChild(valueCell);
-      tbody.appendChild(row);
+        const el = document.createElement(tag);
+        // copier attributs sûrs
+        const allowed = ALLOWED_ATTRS[tag] || [];
+        for(const attr of allowed) {
+          if(node.hasAttribute(attr)) {
+            const val = node.getAttribute(attr);
+            if((attr === 'href' || attr === 'src')) {
+              if(SAFE_URL_RE.test(val)) {
+                el.setAttribute(attr, val);
+              } // else on ignore
+            } else {
+              el.setAttribute(attr, val);
+            }
+          }
+        }
+        // target + rel safety for <a>
+        if(tag === 'A' && !el.getAttribute('target')) {
+          el.setAttribute('target','_blank');
+          el.setAttribute('rel','noopener noreferrer');
+        }
+        // sanitize children
+        Array.from(node.childNodes).forEach(ch => {
+          const s = sanitizeNode(ch);
+          if(s) el.appendChild(s);
+        });
+        return el;
       }
 
-      table.appendChild(tbody);
+      // Truncate HTML while preserving allowed tags structure.
+      // Retourne une string HTML.
+      function truncateHtml(htmlString, maxChars = 200) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlString, 'text/html');
+        const body = doc.body;
+
+        let count = 0;
+        const outFrag = document.createDocumentFragment();
+
+        function walk(sourceNode, targetParent) {
+          for(const node of Array.from(sourceNode.childNodes)) {
+            if(count >= maxChars) break;
+            if(node.nodeType === Node.TEXT_NODE) {
+              const text = node.textContent.replace(/\s+/g,' ');
+              if(!text) continue;
+              const remaining = maxChars - count;
+              if(text.length <= remaining) {
+                targetParent.appendChild(document.createTextNode(text));
+                count += text.length;
+              } else {
+                targetParent.appendChild(document.createTextNode(text.slice(0, remaining) + '…'));
+                count = maxChars;
+                break;
+              }
+            } else if(node.nodeType === Node.ELEMENT_NODE) {
+              const tag = node.tagName.toUpperCase();
+              if(!ALLOWED_TAGS.has(tag)) {
+                // descendre mais sans créer le tag (on conserve le texte intérieur)
+                walk(node, targetParent);
+              } else {
+                const cloned = document.createElement(tag);
+                // copier seulement attributs sûrs
+                const allowed = ALLOWED_ATTRS[tag] || [];
+                for(const attr of allowed) {
+                  if(node.hasAttribute(attr)) {
+                    const val = node.getAttribute(attr);
+                    if((attr === 'href' || attr === 'src')) {
+                      if(SAFE_URL_RE.test(val)) cloned.setAttribute(attr, val);
+                    } else {
+                      cloned.setAttribute(attr, val);
+                    }
+                  }
+                }
+                if(tag === 'A' && !cloned.getAttribute('target')) {
+                  cloned.setAttribute('target','_blank');
+                  cloned.setAttribute('rel','noopener noreferrer');
+                }
+                targetParent.appendChild(cloned);
+                walk(node, cloned);
+                // si aucun enfant ajouté (texte vide) et tag img -> it may have src attr already
+                if(tag === 'IMG' && !cloned.hasChildNodes()) {
+                  // ok
+                }
+              }
+            }
+          }
+        }
+
+        walk(body, outFrag);
+        const div = document.createElement('div');
+        div.appendChild(outFrag);
+        return div.innerHTML;
       }
 
-
-      generateMorseTable(morseTable, 1);
-      generateMorseTable(morseTable, 2);
-      generateMorseTable(morseTable, 3);
-      generateMorseTable(morseTable, 4);
-
-      // Inverse le dictionnaire pour le décodage
-      const reverseMorseTable = {};
-      for (const [key, value] of Object.entries(morseTable)) {
-      reverseMorseTable[value] = key;
+      // Construire le HTML autorisé depuis un objet "content" (ton schéma)
+      // supporte : h1..h6, p, a (array [text, href] ou array of arrays), img (array [alt, src] or array of arrays)
+      function buildHtmlFromContent(content) {
+        if(!content) return '';
+        // si content est une simple string -> p
+        if(typeof content === 'string') {
+          return `<p>${escapeHtml(content)}</p>`;
+        }
+        // si content est tableau, concat
+        if(Array.isArray(content)) {
+          return content.map(buildHtmlFromContent).join('');
+        }
+        // sinon objet
+        const parts = [];
+        for(const key of Object.keys(content)) {
+          const lower = key.toLowerCase();
+          if(/^h[1-6]$/.test(lower) && typeof content[key] === 'string') {
+            parts.push(`<${lower}>${escapeHtml(content[key])}</${lower}>`);
+          } else if(lower === 'p') {
+            parts.push(`<p>${escapeHtml(content[key])}</p>`);
+          } else if(lower === 'a') {
+            const v = content[key];
+            if(Array.isArray(v) && v.length > 0 && typeof v[0] === 'string' && typeof v[1] === 'string') {
+              // simple [text, href]
+              const href = sanitizeUrl(v[1]);
+              if(href) parts.push(`<a href="${href}" target="_blank" rel="noopener noreferrer">${escapeHtml(v[0])}</a>`);
+              else parts.push(escapeHtml(v[0]));
+            } else if(Array.isArray(v)) {
+              // array of arrays
+              v.forEach(item => {
+                if(Array.isArray(item) && item.length >= 2) {
+                  const href = sanitizeUrl(item[1]);
+                  if(href) parts.push(`<a href="${href}" target="_blank" rel="noopener noreferrer">${escapeHtml(item[0])}</a>`);
+                  else parts.push(escapeHtml(item[0]));
+                } else if(typeof item === 'string') {
+                  parts.push(`<a>${escapeHtml(item)}</a>`);
+                }
+              });
+            } else if(typeof v === 'string') {
+              // juste du texte (pas de lien)
+              parts.push(`<a>${escapeHtml(v)}</a>`);
+            }
+          } else if(lower === 'img') {
+            const v = content[key];
+            if(Array.isArray(v) && v.length>=2 && typeof v[1] === 'string') {
+              const src = sanitizeUrl(v[1]);
+              const alt = escapeHtml(v[0] || '');
+              if(src) parts.push(`<img src="${src}" alt="${alt}" />`);
+            } else if(Array.isArray(v)) {
+              // plusieurs images
+              v.forEach(item => {
+                if(Array.isArray(item) && item.length>=2) {
+                  const src = sanitizeUrl(item[1]);
+                  const alt = escapeHtml(item[0] || '');
+                  if(src) parts.push(`<img src="${src}" alt="${alt}" />`);
+                }
+              });
+            }
+          } else if(lower === 'ul' || lower === 'ol') {
+            // Gestion des listes
+            const listType = lower === 'ul' ? 'ul' : 'ol';
+            parts.push(`<${listType}>`);
+            if(Array.isArray(content[key])) {
+              content[key].forEach(item => {
+                parts.push(`<li>${escapeHtml(item)}</li>`);
+              });
+            }
+            parts.push(`</${listType}>`);
+          } else if(lower === 'li') {
+            // Gestion des éléments de liste (si utilisés seuls, mais généralement dans ul/ol)
+            parts.push(`<li>${escapeHtml(content[key])}</li>`);
+          } else if(lower === 'blockquote') {
+            // Gestion des citations
+            parts.push(`<blockquote>${escapeHtml(content[key])}</blockquote>`);
+          } else if(lower === 'code') {
+            // Gestion du code
+            parts.push(`<code>${escapeHtml(content[key])}</code>`);
+          } else if(lower === 'hr') {
+            // Ligne horizontale
+            parts.push('<hr>');
+          } else {
+            // ignore autres clés, mais si valeur string => p
+            if(typeof content[key] === 'string') parts.push(`<p>${escapeHtml(content[key])}</p>`);
+          }
+        }
+        return parts.join('');
       }
 
-      function encodeText(text) {
-      let encoded = "";
-      text = text.toUpperCase();
-      for (let i = 0; i < text.length; i++) {
-      if (morseTable[text[i]]) {
-      encoded += morseTable[text[i]] + " ";
-      } else {
-      encoded += " ";
-      }
-      }
-      return encoded.trim();
+      function escapeHtml(str) {
+        if(typeof str !== 'string') return '';
+        return str
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
       }
 
-      function decodeText(morse) {
-      let decoded = "";
-      const words = morse.split("   ");
-      for (const word of words) {
-      const letters = word.split(" ");
-      for (const letter of letters) {
-      if (reverseMorseTable[letter]) {
-      decoded += reverseMorseTable[letter];
-      } else if (letter === "/") {
-      decoded += " ";
-      }
-      }
-      decoded += " ";
-      }
-      return decoded.trim();
+      function sanitizeUrl(url) {
+        if(!url || typeof url !== 'string') return null;
+        url = url.trim();
+        if(SAFE_URL_RE.test(url)) return url;
+        return null;
       }
 
-      function setStatus(el, msg, ok=true) {
-      el.textContent = msg;
-      el.style.color = ok ? "" : "#ff7b7b";
-      setTimeout(()=>{ if (el.textContent === msg) el.textContent = "" }, 5000);
+      // ---------- RENDU ----------
+      function renderList(entries) {
+        document.getElementById('listView').style.display = '';
+        document.getElementById('articleView').style.display = 'none';
+        document.getElementById('message').style.display = 'none';
+
+        const recentEl = document.getElementById('recent');
+        const olderEl = document.getElementById('older');
+        recentEl.innerHTML = '';
+        olderEl.innerHTML = '';
+
+        // Trier par date décroissante
+        entries.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+        entries.forEach((entry, idx) => {
+          const container = document.createElement('div');
+          container.className = 'entry';
+          const title = document.createElement('h3');
+          title.innerHTML = escapeHtml(entry.title || 'Sans titre');
+          const meta = document.createElement('div');
+          meta.className = 'meta';
+          meta.textContent = `${entry.date || ''} ${entry.mood ? '• ' + entry.mood : ''}`;
+
+          // construire contenu autorisé
+          const fullHtml = buildHtmlFromContent(entry.content);
+          const excerptHtml = truncateHtml(fullHtml, 160);
+
+          const excerpt = document.createElement('div');
+          excerpt.className = 'excerpt';
+          excerpt.innerHTML = excerptHtml;
+
+          // lien vers article
+          const link = document.createElement('a');
+          link.className = 'link';
+          link.href = `newspaper.html?id=${encodeURIComponent(entry.id)}`;
+          link.innerText = 'Voir l’article';
+          // cliquer n'est pas obligatoire: on peut cliquer sur tout le bloc
+          container.appendChild(title);
+          container.appendChild(meta);
+          container.appendChild(excerpt);
+          container.appendChild(document.createElement('br'));
+          container.appendChild(link);
+
+          // séparer recent / older (arbitrairement 3 récents)
+          if(idx < 3) recentEl.appendChild(container);
+          else olderEl.appendChild(container);
+        });
       }
 
-      encodeBtn.addEventListener("click", ()=>{
-      try {
-      const txt = plainEl.value || "";
-      const out = encodeText(txt);
-      encodedEl.value = out;
-      setStatus(plainStatus, "Encoded ✓");
-      } catch(err) {
-      setStatus(plainStatus, "Error: " + (err.message || err), false);
+      function renderArticle(entry, entries) {
+        if(!entry) {
+          showMessage('Article non trouvé.');
+          return;
+        }
+        document.getElementById('listView').style.display = 'none';
+        document.getElementById('articleView').style.display = '';
+        document.getElementById('message').style.display = 'none';
+
+        const art = document.getElementById('article');
+        art.innerHTML = '';
+        const h = document.createElement('h2');
+        h.textContent = entry.title || 'Sans titre';
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = `${entry.date || ''} ${entry.mood ? '• ' + entry.mood : ''}`;
+
+        // Full content: construit HTML autorisé sans tronquer
+        const html = buildHtmlFromContent(entry.content);
+        // sanitize + ensure only allowed tags
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const clean = sanitizeNode(doc.body);
+        const contentDiv = document.createElement('div');
+        contentDiv.appendChild(clean);
+
+        art.appendChild(h);
+        art.appendChild(meta);
+        art.appendChild(contentDiv);
+
+        // navigation prev/next
+        if(Array.isArray(entries)) {
+          // trier par date croissante pour navigation (plus ancien -> plus récent)
+          const sorted = entries.slice().sort((a,b) => new Date(a.date) - new Date(b.date));
+          const i = sorted.findIndex(e => e.id === entry.id);
+          const nav = document.getElementById('articleNav');
+          nav.innerHTML = '';
+          if(i>0) {
+            const prev = sorted[i-1];
+            const aPrev = document.createElement('a');
+            aPrev.href = `newspaper.html?id=${encodeURIComponent(prev.id)}`;
+            aPrev.textContent = '← ' + prev.title;
+            nav.appendChild(aPrev);
+          }
+          if(i < sorted.length - 1) {
+            const next = sorted[i+1];
+            const aNext = document.createElement('a');
+            aNext.href = `newspaper.html?id=${encodeURIComponent(next.id)}`;
+            aNext.textContent = next.title + ' →';
+            const space = document.createElement('div');
+            space.textContent = ' ';
+            nav.appendChild(space);
+            nav.appendChild(aNext);
+          }
+        }
       }
-      });
 
-      decodeBtn.addEventListener("click", ()=>{
-      try {
-      const morse = encodedEl.value.trim();
-      if (!morse) { setStatus(encodedStatus, "No input", false); return; }
-      const out = decodeText(morse);
-      plainEl.value = out;
-      setStatus(encodedStatus, "Decoded ✓");
-      } catch(err) {
-      setStatus(encodedStatus, "Error: " + (err.message || err), false);
+      function showMessage(msg) {
+        document.getElementById('listView').style.display = 'none';
+        document.getElementById('articleView').style.display = 'none';
+        const m = document.getElementById('message');
+        m.style.display = '';
+        m.textContent = msg;
       }
-      });
 
-      copyPlain.addEventListener("click", async ()=>{
-      try {
-      await navigator.clipboard.writeText(plainEl.value || "");
-      setStatus(plainStatus, "Copied");
-      } catch(e) {
-      setStatus(plainStatus, "Copy failed", false);
-      }
-      });
-      copyEncoded.addEventListener("click", async ()=>{
-      try {
-      await navigator.clipboard.writeText(encodedEl.value || "");
-      setStatus(encodedStatus, "Copied");
-      } catch(e) {
-      setStatus(encodedStatus, "Copy failed", false);
-      }
-      });
+      // ---------- MAIN ----------
+      (function main() {
+        fetch('./list.json').then(r => {
+          if(!r.ok) throw new Error('Impossible de charger list.json');
+          return r.json();
+        }).then(data => {
+          const entries = (data && data.newspaper) ? data.newspaper : [];
+          // coerce id to number where possible for comparaisons
+          entries.forEach(e => {
+            if(e.id && typeof e.id === 'string' && !isNaN(parseInt(e.id))) e.id = parseInt(e.id);
+          });
 
-      clearPlain.addEventListener("click", ()=> plainEl.value = "");
-      clearEncoded.addEventListener("click", ()=> encodedEl.value = "");
-
-      exampleBtn.addEventListener("click", ()=>{
-      plainEl.value = "abc1e de df89 k";
-      setStatus(plainStatus, "Example inserted");
-      });
-
-      downloadBtn.addEventListener("click", ()=>{
-      const data = encodedEl.value;
-      if (!data) { setStatus(encodedStatus, "Nothing to download", false); return; }
-      const blob = new Blob([data], {type:"text/plain;charset=utf-8"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "encoded.txt";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      setStatus(encodedStatus, "Downloaded");
-      });
-
-      // keyboard shortcuts
-      document.addEventListener("keydown", (e)=>{
-      if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === "e"){ e.preventDefault(); encodeBtn.click(); }
-      if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === "d"){ e.preventDefault(); decodeBtn.click(); }
-      });
-
+          const q = qs();
+          if(q.id || q.date || q.title) {
+            // trouver article
+            let target = null;
+            if(q.id) {
+              const idNum = isNaN(Number(q.id)) ? q.id : Number(q.id);
+              target = entries.find(e => e.id === idNum || String(e.id) === String(q.id));
+            } else if(q.date) {
+              target = entries.find(e => e.date === q.date);
+            } else if(q.title) {
+              // décodage possible %20 etc
+              const title = q.title;
+              target = entries.find(e => e.title === title);
+            }
+            if(target) {
+              renderArticle(target, entries);
+            } else {
+              showMessage('Aucun article ne correspond aux paramètres fournis.');
+            }
+          } else {
+            // page liste
+            renderList(entries);
+          }
+        }).catch(err => {
+          console.error(err);
+          showMessage('Erreur : impossible de charger le journal (vérifie ./list.json).');
+        });
       })();
     </script>
   </body>
