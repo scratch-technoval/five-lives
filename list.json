@@ -1,0 +1,63 @@
+{
+  "pages": {
+    "./newspaper.html": [
+      "Journal",
+      "Trouvez l'actualité du site et mes projets actuels."
+    ],
+    "./SSSS.html": [
+      "Encodage SSSS",
+      "Système d’encodage symétrique que j’ai développé, reposant sur plusieurs couches successives de cryptage pour renforcer la sécurité.",
+      "SSSS",
+      "Encoder",
+      "Décoder",
+      "Encodage",
+      "Décodage"
+    ],
+    "./morse.html": [
+      "Morse",
+      "Découvrez le code Morse et son utilisation historique, notamment dans les communications radio durant la Seconde Guerre mondiale.",
+      "Encoder",
+      "Décoder",
+      "Seconde Guerre mondiale",
+      "radio",
+      "antenne",
+      "Encodage",
+      "Décodage"
+    ],
+    "./index.html": [
+      "Accueil",
+      "Page d’accueil du site five_lives.",
+      "Home",
+      "Présentation"
+    ],
+    "./search.html": [
+      "Recherche",
+      "Page de recherche intelligente permettant de trouver rapidement une page ou une fonctionnalité du site.",
+      "filtres",
+      "recherche"
+    ],
+    "./edf-tempo.html": [
+      "Couleur EDF Tempo",
+      "Consultez la couleur EDF Tempo du jour, de la veille et les prévisions à venir grâce à l’API 'www.api-couleur-tempo.fr'.",
+      "EDF",
+      "Tempo",
+      "électricité"
+    ]
+  },
+  "newspaper": [
+    {
+      "id": 1,
+      "date": "2026-02-13",
+      "title": "Création du site",
+      "mood": "😃",
+      "content": [
+        {
+          "h1": "Création du site"
+        },
+        {
+          "p": "Je suis Valentin, un jeune adolescent passionné par l'informatique, et voici mon premier site, j'y publierai des outils, jeux, articles..."
+        }
+      ]
+    }
+  ]
+}
