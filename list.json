@@ -46,6 +46,28 @@
   },
   "newspaper": [
     {
+      "id": 2,
+      "date": "2026-04-04",
+      "title": "Shadow Rooms",
+      "mood": "😝",
+      "content": [
+        {
+          "h1": "Shadows Rooms"
+        },
+        {
+          "p": "J'ai créé sur un scratch un jeu 3D, il faut survivre face aux monstres, et récolter les 10 pièces en veillant à ce que vous ayez assez de batterie sur votre lampe frontale..."
+        },
+        {
+          "a": [
+            [
+              "Lien Scratch",
+              "https://scratch.mit.edu/projects/1290383389/"
+            ]
+          ]
+        }
+      ]
+    },
+    {
       "id": 1,
       "date": "2026-02-13",
       "title": "Création du site",
