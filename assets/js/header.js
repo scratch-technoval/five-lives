@@ -15,6 +15,7 @@ header = `
         </div>
       </div>
       <a id="importance-4" href="./edf-tempo.html">Couleur EDF Tempo</a>
+      <a id="importance-4" href="./flags.html">Générateur de drapeaux</a>
       </div>
     </nav>
   </div>
