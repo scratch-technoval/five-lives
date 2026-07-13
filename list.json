@@ -42,6 +42,11 @@
       "EDF",
       "Tempo",
       "électricité"
+    ],
+    "./flags.html": [
+      "Générateur de drapeaux",
+      "Génération infinie de drapeaux",
+      "drapeaux"
     ]
   },
   "newspaper": [
