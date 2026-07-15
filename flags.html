@@ -17,7 +17,7 @@
     --border: rgba(255,255,255,0.06);
     --shadow: 0 6px 24px rgba(2,6,23,0.6);
     --input-bg: rgba(255,255,255,0.01);
-    --glass: rgba(255,255,255,0.03);
+    --glass: rgba(200, 200, 200, 0.159);
     /* aliases internes au générateur */
     --bg: #0d1117;
     --bg-card: #161b22;
@@ -25,6 +25,8 @@
     --line: var(--border);
     --gold: #e8b84b;
     --red: #e83f3f;
+    --gold-varient: #fff;
+    --red-varient: #fff;
   }
   *{box-sizing:border-box;}
   html,body{
@@ -93,8 +95,8 @@
   }
   .act-btn{
     width:52px; height:52px; border-radius:50%;
-    background:var(--glass); backdrop-filter: blur(10px);
-    border:1px solid var(--line); color:var(--ink);
+    background:var(--glass); backdrop-filter: blur(5px);
+    border:1px solid var(--line); color:black;
     font-size:22px; display:flex; align-items:center; justify-content:center;
     cursor:pointer; transition: transform .12s ease, background .15s ease, color .15s ease;
   }
@@ -127,7 +129,7 @@
     height: 140px;
   }
   .modal-header h2{ margin:0; font-size:36px; font-weight:700; }
-  .close-btn{
+  .modal-action-btn{
     background:none; border:1px solid var(--line); color:var(--ink);
     width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer;
   }
@@ -140,17 +142,78 @@
     background:var(--bg-card); border:1px solid var(--line); border-radius:12px;
     overflow:hidden; display:flex; flex-direction:column;
   }
-  .mini-flag{ aspect-ratio:3/2; background:#000; }
+  .mini-flag {
+    aspect-ratio: 3/2;
+    background: #000;
+    position: relative;
+  }
+
+  .mini-flag-name {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+    white-space: nowrap;
+    z-index: 2;
+  }
   .mini-flag svg{ width:100%; height:100%; display:block; }
   .collection-row{
     display:flex; align-items:center; justify-content:space-between;
     padding:10px 12px;
   }
-  .collection-badges{ font-size:14px; }
+  .star-collection-active,
+  .star-collection-unactive,
+  .heart-collection-active,
+  .heart-collection-unactive {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 6px;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+
+  .star-collection-unactive,
+  .heart-collection-unactive {
+    opacity: 0.25;
+    filter: grayscale(1);
+  }
+
+  .star-collection-active,
+  .heart-collection-active {
+    opacity: 1;
+    filter: none;
+  }
+
+  .star-collection-active:hover,
+  .heart-collection-active:hover,
+  .star-collection-unactive:hover,
+  .heart-collection-unactive:hover {
+    transform: scale(1.2);
+  }
   .collection-actions{ display:flex; gap:6px; }
+  button svg {
+    margin: 0;
+    padding: 0;
+  }
   .mini-btn{
-    width:32px; height:32px; border-radius:50%; border:1px solid var(--line);
-    background:var(--glass); color:var(--ink); font-size:14px; cursor:pointer;
+    width:24px; height:24px; border-radius:50%; border:1px solid var(--line);
+    background:var(--glass); color:var(--ink); font-size:12px; cursor:pointer;
+  }
+  .mini-btn {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    overflow: hidden;
   }
   .mini-btn:active{ transform:scale(0.9); }
   .empty{ color:var(--muted); text-align:center; margin-top:60px; font-size:15px; }
@@ -164,33 +227,38 @@
 
 <div class="modal hidden" id="collectionModal">
   <div class="modal-header">
-    <h2>Ma collection</h2>
-    <button class="close-btn" id="closeCollection">✕</button>
+    <div class="left"><h2>Ma collection</h2></div>
+    <div class="right">
+      <button class="modal-action-btn" id="devlopperNewFavorite">+</button>
+      <button class="modal-action-btn" id="closeCollection">×</button>
+    </div>
   </div>
   <div class="modal-body">
     <div class="collection-grid" id="collectionGrid"></div>
   </div>
 </div>
 
-  <script defer>
-    header = `
+  <script>
+function icon(iconName="", width=24) {
+  iconName = iconName.toLowerCase();
+  if (iconName.includes("fav") || iconName.includes("star")) {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--gold)" width="${width}" style="display:block;flex-shrink:0;"><path fill="current" stroke="var(--gold-varient)" stroke-width="1px" d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z" /></svg>`;
+  } else if (iconName.includes("like") || iconName.includes("heart") || iconName.includes("love")) {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--red)" width="${width}" style="display:block;flex-shrink:0;"><path fill="current" stroke="var(--red-varient)" stroke-width="1px" d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z" /></svg>`;
+  } else if (iconName.includes("save") || iconName.includes("download")) {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" width="${width}" style="display:block;flex-shrink:0;"><path fill="current" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" /></svg>`
+  } else if (iconName.includes("print")) {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" width="${width}" style="display:block;flex-shrink:0;"><path fill="current" d="M18,3H6V7H18M19,12A1,1 0 0,1 18,11A1,1 0 0,1 19,10A1,1 0 0,1 20,11A1,1 0 0,1 19,12M16,19H8V14H16M19,8H5A3,3 0 0,0 2,11V17H6V21H18V17H22V11A3,3 0 0,0 19,8Z" /></svg>`
+  }
+}
+
+header = `
 <header class="site-header">
   <div class="header-inner">
     <div class="logo"><img src="./assets/favicon.ico" height="16" style="background-color: white; border-radius: 100%;" /> <a href="./index.html">five_lives</a></div>
     <nav class="nav">
       <a id="importance1" href="./search.html">Rechercher</a>
-      <a id="importance1" href="./newspaper.html">Journal</a>
-
-      <div id="importance-2" class="dropdown">
-        <a href="#" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Cryptage ▾</a>
-        <div class="opener"></div>
-        <div class="dropdown-menu" role="menu" aria-label="Cryptage menu">
-          <a href="./SSSS.html" role="menuitem">Encodage SSSS</a>
-          <a href="./morse.html" role="menuitem">Morse</a>
-        </div>
-      </div>
-      <a id="importance-4" href="./edf-tempo.html">Couleur EDF Tempo</a>
-      <a href="#" id="openCollection">⭐ Collection <span class="count-badge" id="collectionCount">0</span></a>
+      <a href="#" id="openCollection">${icon("fav", 16)} Collection <span class="count-badge" id="collectionCount">0</span></a>
       </div>
     </nav>
   </div>
@@ -199,8 +267,6 @@
 
 document.getElementById("header").innerHTML = header
 
-  </script>
-<script>
 /* ============ PALETTE & GÉNÉRATION ============ */
 const PALETTE = [
   "#E74C3C", // Rouge vif
@@ -222,6 +288,7 @@ const TYPE_LABELS = {
   'vertical':'Bandes verticales',
   'diagonal':'Diagonale',
   'cross':'Croix nordique',
+  'cross-border': 'Croix nordique bordée',
   'circle':'Disque central',
   'canton-star':'Canton étoilé',
   'triangle-side':'Triangle au mât'
@@ -235,15 +302,77 @@ function randColor(exclude=[]){
 }
 function uid(){ return 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 
+let flagsNames = [];
+
+function genererFauxNomPays() {
+// Syllabes variées, incluant des sons exotiques et des caractères accentués
+const syllabes = [
+    "Ma", "Ri", "Ba", "Ka", "Ta", "Lo", "Zu", "Pa", "Da", "Fa", "Ga", "Ha", "Ja", "La", "Na",
+    "Be", "Ce", "De", "Fe", "Ge", "He", "Ke", "Le", "Me", "Ne", "Pe", "Re", "Se", "Te",
+    "Zo", "Bo", "Co", "Do", "Fo", "Go", "Jo", "Mo", "No", "Po", "Ro", "So", "To",
+    "É", "È", "Ç", "À", "Ù", "Ia", "Io", "Iu", "Ea", "Eo", "Eu", "Aa", "Oo", "Uu",
+    "Stan", "Vil", "Bor", "Kan", "Mar", "Sal", "Tun", "Yem", "Zim", "Ang", "Moz"
+];
+
+// Terminaisons inspirées de vrais pays
+const terminaisons = [
+    "istan", "land", "ville", "ia", "on", "a", "o", "u", "y", "is", "or", "al",
+    "ique", "ie", "éa", "èze", "çat", "à", "ù", "ou", "ix", "ez", "an", "in"
+];
+
+// Préfixes pour ajouter du réalisme
+const prefixes = ["Nord-", "Sud-", "Est-", "Ouest-", "Nouvelle-", "Grand-", "Petit-"];
+
+    // Décider si on ajoute un préfixe (30% de chance)
+    let nom = "";
+    if (Math.random() < 0.3) {
+        nom += prefixes[Math.floor(Math.random() * prefixes.length)];
+    }
+
+    // Choisir entre 2 et 4 syllabes
+    const nombreSyllabes = Math.floor(Math.random() * 3) + 2;
+    const syllabesUtilisees = new Set(); // Éviter les répétitions
+
+    // Ajouter les syllabes
+    for (let i = 0; i < nombreSyllabes; i++) {
+        let syllabe;
+        do {
+            syllabe = syllabes[Math.floor(Math.random() * syllabes.length)];
+        } while (syllabesUtilisees.has(syllabe) && i < syllabes.length - 1);
+        syllabesUtilisees.add(syllabe);
+        nom += syllabe;
+    }
+
+    // Ajouter une terminaison
+    const terminaison = terminaisons[Math.floor(Math.random() * terminaisons.length)];
+    nom += terminaison;
+
+    // Capitaliser la première lettre de chaque partie
+    nom = nom
+        .split(/[- ]/)
+        .map(mot => mot.charAt(0).toUpperCase() + mot.slice(1).toLowerCase())
+        .join("");
+
+    return nom;
+}
+
 function generateFlagDef(){
   const types = Object.keys(TYPE_LABELS);
   const type = types[Math.floor(Math.random()*types.length)];
-  const def = { id: uid(), type };
+  let name = genererFauxNomPays();
+  while (name in flagsNames) {
+    name = genererFauxNomPays();
+  }
+  flagsNames.push(name);
+  const def = { id: name, type };
 
   switch(type){
     case 'horizontal':
     case 'vertical': {
-      const n = Math.random()<0.5 ? 2 : 3;
+      let n = Math.random();
+      if (n<1/3){n=4}
+      else if (n<2/3){n=2}
+      else {n=3}
       const colors = []; let last=null;
       for(let i=0;i<n;i++){ const c = randColor(last?[last]:[]); colors.push(c); last=c; }
       def.colors = colors;
@@ -258,14 +387,20 @@ function generateFlagDef(){
     case 'cross': {
       const c1 = randColor(), c2 = randColor([c1]);
       def.colors = [c1,c2];
-      def.offset = 0.3 + Math.random()*0.15;
+      def.offsetX = [0.33, 0.33, 0.67][Math.floor(Math.random()*3)];
+      break;
+    }
+    case 'cross-border': {
+      const c1 = randColor(), c2 = randColor([c1]), c3 = randColor([c1,c2]);
+      def.colors = [c1, c2, c3]; // fond, contour, croix
+      def.offsetX = [0.33, 0.33, 0.67][Math.floor(Math.random()*3)];
       break;
     }
     case 'circle': {
       const c1 = randColor(), c2 = randColor([c1]);
       def.colors = [c1,c2];
-      def.cx = 0.4 + Math.random()*0.2;
-      def.r = 0.2 + Math.random()*0.12;
+      def.cx = [0.28, 0.5, 0.72][Math.floor(Math.random()*3)]; // gauche, centre, droite
+      def.r  = [0.18, 0.24, 0.30][Math.floor(Math.random()*3)]; // petit, moyen, grand
       break;
     }
     case 'canton-star': {
@@ -320,10 +455,21 @@ function renderFlagSVG(def, w=600, h=400){
     }
     case 'cross': {
       const [c1,c2]=def.colors;
-      const barH=h*0.22, barW=w*0.16, vx=w*def.offset;
+      const barH=h*0.22, barW=w*0.16, vx=w*def.offsetX;
       inner = `<rect width="${w}" height="${h}" fill="${c1}"/>
         <rect x="0" y="${h/2-barH/2}" width="${w}" height="${barH}" fill="${c2}"/>
         <rect x="${vx-barW/2}" y="0" width="${barW}" height="${h}" fill="${c2}"/>`;
+      break;
+    }
+    case 'cross-border': {
+      const [c1, c2, c3] = def.colors;
+      const barH = h * 0.22, barW = w * 0.14, vx = w * def.offsetX;
+      const borderH = barH + h * 0.08, borderW = barW + w * 0.05;
+      inner = `<rect width="${w}" height="${h}" fill="${c1}"/>
+        <rect x="0" y="${h/2 - borderH/2}" width="${w}" height="${borderH}" fill="${c2}"/>
+        <rect x="${vx - borderW/2}" y="0" width="${borderW}" height="${h}" fill="${c2}"/>
+        <rect x="0" y="${h/2 - barH/2}" width="${w}" height="${barH}" fill="${c3}"/>
+        <rect x="${vx - barW/2}" y="0" width="${barW}" height="${h}" fill="${c3}"/>`;
       break;
     }
     case 'circle': {
@@ -449,13 +595,15 @@ function createCard(def, isFirst){
   card.innerHTML = `
     <div class="flag-stage">${renderFlagSVG(def)}</div>
     <div class="card-meta">Type&nbsp;: <b>${TYPE_LABELS[def.type]}</b></div>
+    <div class="card-meta">${def.id}</div>
     <div class="actions">
-      <button class="act-btn star-btn" title="Ajouter aux favoris">⭐</button>
-      <button class="act-btn heart-btn" title="J'aime">❤️</button>
-      <button class="act-btn text-btn dl-btn" title="Télécharger en PNG">💾 PNG</button>
-      <button class="act-btn text-btn svg-btn" title="Télécharger en SVG">💾 SVG</button>
-      <button class="act-btn print-btn" title="Imprimer">🖨️</button>
+      <button class="act-btn star-btn" title="Ajouter aux favoris">${icon("fav", 16)}</button>
+      <button class="act-btn heart-btn" title="J'aime">${icon("like", 16)}</button>
+      <button class="act-btn text-btn dl-btn" title="Télécharger en PNG">${icon("save")} PNG</button>
+      <button class="act-btn text-btn svg-btn" title="Télécharger en SVG">${icon("save")} SVG</button>
+      <button class="act-btn print-btn" title="Imprimer">${icon("print")}</button>
     </div>
+    
     ${isFirst ? '<div class="scroll-hint">▲ scrollez ▼</div>' : ''}
   `;
 
@@ -519,21 +667,28 @@ function openCollection(){
   collectionGrid.innerHTML = '';
 
   if(ids.size === 0){
-    collectionGrid.innerHTML = '<p class="empty">Aucun drapeau favori ou aimé pour l\'instant.<br>Touchez ⭐ ou ❤️ sur un drapeau du fil pour le garder ici.</p>';
+    collectionGrid.innerHTML = `<p class="empty">Aucun drapeau favori ou aimé pour l\'instant.<br>Touchez ${icon("fav", 16)} ou ${icon("like", 16)} sur un drapeau du fil pour le garder ici.</p>`;
   } else {
     ids.forEach(id=>{
       const def = favorites[id] || likes[id];
       const item = document.createElement('div');
       item.className = 'collection-item';
       item.innerHTML = `
-        <div class="mini-flag">${renderFlagSVG(def, 300, 200)}</div>
+        <div class="mini-flag">
+          <div class="mini-flag-name">${id}</div>
+          ${renderFlagSVG(def, 300, 200)}
+        </div>
         <div class="collection-row">
-          <div class="collection-badges">${favorites[id] ? '⭐' : ''}${likes[id] ? '❤️' : ''}</div>
+          <div class="collection-badges">
+            <button id="star" class="${favorites[id] ? 'star-collection-active' : 'star-collection-unactive'}">${icon("fav", 16)}</button>
+            <button id="heart" class="${likes[id] ? 'heart-collection-active' : 'heart-collection-unactive'}">${icon("like", 16)}</button>
+          </div>
           <div class="collection-actions">
-            <button class="mini-btn dl-mini" title="Télécharger en PNG" style="font-size:9px;font-weight:700;">💾 PNG</button>
-            <button class="mini-btn svg-mini" title="Télécharger en SVG" style="font-size:9px;font-weight:700;">💾 SVG</button>
-            <button class="mini-btn pr-mini" title="Imprimer">🖨️</button>
-            <button class="mini-btn rm-mini" title="Retirer">❌</button>
+            <button class="mini-btn json-mini" title="Copier le contenu JSON" style="font-size:6px;font-weight:500;">${icon("save", 12)} JSON</button>
+            <button class="mini-btn dl-mini" title="Télécharger en PNG" style="font-size:6px;font-weight:500;">${icon("save", 12)} PNG</button>
+            <button class="mini-btn svg-mini" title="Télécharger en SVG" style="font-size:6px;font-weight:500;">${icon("save", 12)} SVG</button>
+            <button class="mini-btn pr-mini" title="Imprimer">${icon("print", 16)}</button>
+            <button class="mini-btn rm-mini" title="Retirer">✕</button>
           </div>
         </div>
       `;
@@ -549,11 +704,75 @@ function openCollection(){
         updateCollectionBadge();
         openCollection();
       });
+      item.querySelector('.json-mini').addEventListener('click', () => {
+        navigator.clipboard.writeText(JSON.stringify(def));
+      });
+      const starBtn = item.querySelector('#star');
+      const heartBtn = item.querySelector('#heart');
+
+      starBtn.addEventListener('click', () => {
+        if (favorites[id]) delete favorites[id];
+        else favorites[id] = def;
+        saveStore('flags_favorites', favorites);
+        starBtn.className = favorites[id] ? 'star-collection-active' : 'star-collection-unactive';
+
+        // Sync le bouton dans le feed si la carte est visible
+        const cardInFeed = feed.querySelector(`.card[data-id="${id}"]`);
+        if (cardInFeed?.refreshButtons) cardInFeed.refreshButtons();
+
+        // Supprime de la liste si plus aucun des deux
+        if (!favorites[id] && !likes[id]) {
+          updateCollectionBadge();
+          item.remove();
+        } else {
+          updateCollectionBadge();
+        }
+      });
+
+      heartBtn.addEventListener('click', () => {
+        if (likes[id]) delete likes[id];
+        else likes[id] = def;
+        saveStore('flags_likes', likes);
+        heartBtn.className = likes[id] ? 'heart-collection-active' : 'heart-collection-unactive';
+
+        const cardInFeed = feed.querySelector(`.card[data-id="${id}"]`);
+        if (cardInFeed?.refreshButtons) cardInFeed.refreshButtons();
+
+        if (!favorites[id] && !likes[id]) {
+          updateCollectionBadge();
+          item.remove();
+        } else {
+          updateCollectionBadge();
+        }
+      });
       collectionGrid.appendChild(item);
     });
   }
   collectionModal.classList.remove('hidden');
 }
+
+document.getElementById('devlopperNewFavorite').addEventListener('click', () => {
+  const raw = prompt('Colle la définition du drapeau (JSON) :');
+  if (!raw) return; // Annuler ou vide
+
+  let def;
+  try {
+    def = JSON.parse(raw.trim());
+  } catch (e) {
+    alert('JSON invalide.');
+    return;
+  }
+
+  if (!def.id || !def.type || !def.colors) {
+    alert('Définition incomplète (id, type et colors requis).');
+    return;
+  }
+
+  favorites[def.id] = def;
+  saveStore('flags_favorites', favorites);
+  updateCollectionBadge();
+  openCollection(); // recharge la grille
+});
 
 /* Le header five_lives est injecté via innerHTML APRÈS ce script,
    donc on écoute sur document en délégation — fonctionne dans les deux cas
