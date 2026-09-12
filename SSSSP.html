@@ -1,319 +1,856 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>SSSS+ — Encodeur / Décodeur à clé</title>
-    <link rel="stylesheet" href="./assets/css/header.css" />
-    <link rel="stylesheet" href="./assets/css/style.css" />
-    <script src="./assets/js/header.js" defer></script>
-    <link rel="shortcut icon" href="./assets/favicon.ico" type="image/x-icon">
-  </head>
-  <body>
-    <div id="header"></div>
-    <div class="wrap">
-      <div class="card">
-        <div>
-          <h1>
-  SSSS+ — Encodeur / Décodeur à clé
-</h1>
-          <p class="lead">
-            Encode et décode avec un système complexe composé de plusieurs
-            étapes d'encodage.
-          </p>
-        </div>
-        <div class="small">
-          Pas de bibliothèques externes · Fonctionne sans internet
-        </div>
-        <div
-          style="margin-top:18px;display:flex;justify-content:flex-end;gap:8px">
-          <button id="example">Insérer un exemple</button>
-          <button id="download">Télécharger le texte encodé (.txt)</button>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>SSSS+ — Encodeur / Décodeur Unicode à clé</title>
+
+  <link rel="stylesheet" href="./assets/css/header.css" />
+  <link rel="stylesheet" href="./assets/css/style.css" />
+  <script src="./assets/js/header.js" defer></script>
+  <link rel="shortcut icon" href="./assets/favicon.ico" type="image/x-icon">
+
+  <style>
+    body {
+      margin: 0;
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 20px;
+      margin-top: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.18);
+      color: inherit;
+      font: inherit;
+      outline: none;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    textarea {
+      min-height: 220px;
+      resize: vertical;
+      font-family: monospace;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 16px;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .status {
+      margin-top: 14px;
+      min-height: 22px;
+      opacity: 0.9;
+    }
+
+    .hint {
+      font-size: 0.9rem;
+      opacity: 0.7;
+      margin-top: 7px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>SSSS+ — Encodeur / Décodeur Unicode à clé</h1>
+  </header>
+
+  <main class="wrap">
+
+    <!-- Clé -->
+    <section class="card">
+      <div class="field">
+        <label for="key">Clé</label>
+
+        <input
+          id="key"
+          type="text"
+          autocomplete="off"
+          placeholder="Entrez la clé"
+        >
+
+        <div class="hint">
+          La clé sert directement à déterminer les décalages Unicode.
+          Elle n'est jamais enregistrée dans le texte encodé.
         </div>
       </div>
-<section class="card" style="margin-top:18px">
-  <label for="key">Clé de décodage</label>
+    </section>
 
-  <input
-    id="key"
-    type="text"
-    autocomplete="off"
-    placeholder="Entrez la clé pour encoder ou décoder"
-  />
+    <!-- Texte clair -->
+    <section class="card">
+      <div class="field">
+        <label for="plain">Texte à encoder</label>
 
-  <div class="footer">
-    <div class="note">
-      La même clé doit être utilisée pour décoder.
-      SSSS+ applique un décalage Unicode déterministe dérivé de cette clé.
-    </div>
-    <div id="keyStatus" class="status"></div>
-  </div>
-</section>
-      <main class="grid">
-        <section class="card">
-          <label for="plain">Texte</label>
-          <textarea
-            id="plain"
-            placeholder="Saisissez le texte à encoder ou le texte décodé"></textarea>
-          <div class="controls">
-            <button id="encodeBtn" class="primary">Encoder →</button>
-            <button id="clearPlain">Effacer</button>
-            <button id="copyPlain">Copier</button>
-          </div>
-          <div class="footer">
-            <div class="note">
-              Le texte est traité en Unicode avant encodage.
-            </div>
-            <div id="plainStatus" class="status"></div>
-          </div>
-        </section>
+        <textarea
+          id="plain"
+          placeholder="Entrez le texte à encoder..."
+        ></textarea>
+      </div>
+    </section>
 
-        <section class="card">
-          <label for="encoded">Encodé (base64)</label>
-          <textarea
-            id="encoded"
-            placeholder="Collez le payload SSSS+ ici pour décoder"></textarea>
-          <div class="controls">
-            <button id="decodeBtn" class="revprimary">← Décoder</button>
-            <button id="clearEncoded">Effacer</button>
-            <button id="copyEncoded">Copier</button>
-          </div>
-          <div class="footer">
-            <div class="note">
-              Structure: base 64 de [1 caractère][caractère normal][nouvelle
-              ligne][HEX séparé par des virgule].
-            </div>
-            <div id="encodedStatus" class="status"></div>
-          </div>
-        </section>
-      </main>
-    </div>
+    <!-- Texte encodé -->
+    <section class="card">
+      <div class="field">
+        <label for="encoded">Texte encodé</label>
 
-    <div id="footer"></div>
+        <textarea
+          id="encoded"
+          placeholder="Le texte encodé apparaîtra ici..."
+        ></textarea>
+      </div>
+    </section>
 
-    <script>
-      (() => {
-        const MAX_CP = 0x10FFFF;
-        const SURROGATE_START = 0xD800;
-        const SURROGATE_END = 0xDFFF;
+    <!-- Boutons -->
+    <section class="card">
 
-        // Convertit la clé en une suite de décalages Unicode reproductibles.
-        // Ce mécanisme est volontairement simple : SSSS+ n'est pas présenté comme
-        // un chiffrement cryptographique.
-        function keyShifts(key) {
-          const bytes = new TextEncoder().encode(key);
-          if (!bytes.length) throw new Error("clé vide");
-          let a = 0x811c9dc5;
-          let b = 0x9e3779b9;
-          for (const byte of bytes) {
-            a ^= byte;
-            a = Math.imul(a, 0x01000193) >>> 0;
-            b ^= (byte + 0x9d) & 0xff;
-            b = Math.imul(b, 0x85ebca6b) >>> 0;
-            b = ((b << 13) | (b >>> 19)) >>> 0;
-          }
-          const shifts = [];
-          for (let i = 0; i < Math.max(8, bytes.length); i++) {
-            a ^= a >>> 16;
-            a = Math.imul(a, 0x7feb352d) >>> 0;
-            a ^= a >>> 15;
-            a = Math.imul(a, 0x846ca68b) >>> 0;
-            a ^= a >>> 16;
-            b ^= b >>> 16;
-            b = Math.imul(b, 0x21f0aaad) >>> 0;
-            b ^= b >>> 15;
-            shifts.push(((a ^ b) % MAX_CP + MAX_CP) % MAX_CP);
-          }
-          return shifts;
-        }
+      <div class="buttons">
+        <button id="encodeBtn" type="button">
+          Encoder
+        </button>
 
-        function shiftCodePoint(cp, shift) {
-          let out = (cp + shift) % (MAX_CP + 1);
-          // Évite de produire des points de code Unicode réservés aux surrogates.
-          if (out >= SURROGATE_START && out <= SURROGATE_END) {
-            out = SURROGATE_END + 1 + ((out - SURROGATE_START) % (MAX_CP - SURROGATE_END));
-          }
-          return out;
-        }
+        <button id="decodeBtn" type="button">
+          Décoder
+        </button>
 
-        function unshiftCodePoint(cp, shift) {
-          let out = (cp - shift) % (MAX_CP + 1);
-          if (out < 0) out += MAX_CP + 1;
-          if (out >= SURROGATE_START && out <= SURROGATE_END) {
-            out = SURROGATE_START - 1 - ((out - SURROGATE_START) % SURROGATE_START);
-          }
-          return out;
-        }
+        <button id="clearBtn" type="button">
+          Effacer
+        </button>
 
-        function encodeText(text, key) {
-          const shifts = keyShifts(key);
-          let out = "";
-          let i = 0;
-          for (const ch of text) {
-            const cp = ch.codePointAt(0);
-            const shifted = shiftCodePoint(cp, shifts[i % shifts.length]);
-            out += String.fromCodePoint(shifted);
-            i++;
-          }
-          const payload = JSON.stringify({
-            v: "SSSS+",
-            shifts: shifts,
-            data: out
-          });
-          return utf8ToBase64(new TextEncoder().encode(payload));
-        }
+        <button id="copyBtn" type="button">
+          Copier
+        </button>
 
-        function utf8ToBase64(u8) {
-          let binary = "";
-          const chunk = 0x8000;
-          for (let i = 0; i < u8.length; i += chunk) {
-            binary += String.fromCharCode.apply(null, u8.subarray(i, i + chunk));
-          }
-          return btoa(binary);
-        }
+        <button id="exampleBtn" type="button">
+          Exemple
+        </button>
 
-        function base64ToUtf8(b64) {
-          const binary = atob(b64);
-          const bytes = new Uint8Array(binary.length);
-          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-          return bytes;
-        }
+        <button id="downloadBtn" type="button">
+          Télécharger
+        </button>
+      </div>
 
-        function decodeText(b64, key) {
-          const payload = JSON.parse(new TextDecoder().decode(base64ToUtf8(b64)));
-          if (payload.v !== "SSSS+" || !Array.isArray(payload.shifts) || typeof payload.data !== "string") {
-            throw new Error("payload SSSS+ invalide");
-          }
+      <div id="status" class="status"></div>
 
-          const expected = keyShifts(key);
-          if (expected.length !== payload.shifts.length ||
-              expected.some((v, i) => v !== payload.shifts[i])) {
-            throw new Error("clé incorrecte");
-          }
+    </section>
 
-          let out = "";
-          let i = 0;
-          for (const ch of payload.data) {
-            const cp = ch.codePointAt(0);
-            const original = unshiftCodePoint(cp, expected[i % expected.length]);
-            out += String.fromCodePoint(original);
-            i++;
-          }
-          return out;
-        }
+  </main>
 
-const keyEl = document.getElementById("key");
-const keyStatus = document.getElementById("keyStatus");
-const plainEl = document.getElementById("plain");
-        const encodedEl = document.getElementById("encoded");
-        const encodeBtn = document.getElementById("encodeBtn");
-        const decodeBtn = document.getElementById("decodeBtn");
-        const copyPlain = document.getElementById("copyPlain");
-        const copyEncoded = document.getElementById("copyEncoded");
-        const clearPlain = document.getElementById("clearPlain");
-        const clearEncoded = document.getElementById("clearEncoded");
-        const plainStatus = document.getElementById("plainStatus");
-        const encodedStatus = document.getElementById("encodedStatus");
-        const exampleBtn = document.getElementById("example");
-        const downloadBtn = document.getElementById("download");
+<script>
+"use strict";
 
-        function setStatus(el, msg, ok=true){
-          el.textContent = msg;
-          el.style.color = ok ? "" : "#ff7b7b";
-          setTimeout(()=>{ if (el.textContent === msg) el.textContent = "" }, 5000);
-        }
+/*
+ * ============================================================
+ * SSSS+
+ * Encodeur / Décodeur Unicode à clé
+ * ============================================================
+ *
+ * Principe :
+ *
+ *   clé
+ *    ↓
+ * générateur pseudo-aléatoire déterministe
+ *    ↓
+ * suite de décalages Unicode
+ *    ↓
+ * texte transformé
+ *    ↓
+ * UTF-8
+ *    ↓
+ * Base64
+ *
+ * IMPORTANT :
+ * - la clé n'est JAMAIS stockée dans le résultat ;
+ * - les décalages ne sont JAMAIS stockés dans le résultat ;
+ * - le décodage reconstruit les mêmes décalages à partir de la clé ;
+ * - aucune signature n'est ajoutée ;
+ * - une mauvaise clé peut donc produire du texte valide :
+ *   ce n'est volontairement pas considéré comme une erreur.
+ */
 
-        encodeBtn.addEventListener("click", ()=>{
-          try{
-const key = keyEl.value.trim();
 
-if (!key) {
-  setStatus(keyStatus, "Clé requise", false);
-  keyEl.focus();
-  return;
+/* ============================================================
+ * DOM
+ * ============================================================ */
+
+const keyInput = document.getElementById("key");
+const plainInput = document.getElementById("plain");
+const encodedInput = document.getElementById("encoded");
+
+const encodeBtn = document.getElementById("encodeBtn");
+const decodeBtn = document.getElementById("decodeBtn");
+const clearBtn = document.getElementById("clearBtn");
+const copyBtn = document.getElementById("copyBtn");
+const exampleBtn = document.getElementById("exampleBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+
+const status = document.getElementById("status");
+
+
+/* ============================================================
+ * Constantes Unicode
+ * ============================================================
+ *
+ * Unicode possède 0x110000 valeurs possibles.
+ *
+ * Les 0x800 valeurs comprises entre D800 et DFFF sont réservées
+ * aux surrogate pairs UTF-16 et ne sont pas des Unicode scalar
+ * values valides.
+ *
+ * On travaille donc sur :
+ *
+ *   0x110000 - 0x800 = 0x10F800
+ *
+ * valeurs Unicode valides.
+ *
+ * Cette représentation garantit que le décalage est parfaitement
+ * réversible.
+ */
+
+const UNICODE_SCALARS = 0x10F800;
+const SURROGATE_START = 0xD800;
+const SURROGATE_COUNT = 0x800;
+
+
+/* ============================================================
+ * Conversion Unicode <-> index compact
+ * ============================================================ */
+
+function scalarToIndex(codePoint) {
+  if (codePoint < SURROGATE_START) {
+    return codePoint;
+  }
+
+  return codePoint - SURROGATE_COUNT;
 }
 
-const txt = plainEl.value || "";
-const out = encodeText(txt, key);
-            encodedEl.value = out;
-            setStatus(plainStatus, "Encoded ✓");
-          }catch(err){
-            setStatus(plainStatus, "Error: " + (err.message || err), false);
-          }
-        });
 
-        decodeBtn.addEventListener("click", ()=>{
-          try{
-const key = keyEl.value.trim();
+function indexToScalar(index) {
+  if (index < SURROGATE_START) {
+    return index;
+  }
 
-if (!key) {
-  setStatus(keyStatus, "Clé requise", false);
-  keyEl.focus();
-  return;
+  return index + SURROGATE_COUNT;
 }
 
-const b64 = encodedEl.value.trim();
 
-if (!b64) {
-  setStatus(encodedStatus, "No input", false);
-  return;
+/* ============================================================
+ * Décalage Unicode
+ * ============================================================ */
+
+function shiftScalar(codePoint, shift) {
+
+  const index = scalarToIndex(codePoint);
+
+  const shiftedIndex =
+    (index + shift) % UNICODE_SCALARS;
+
+  return indexToScalar(shiftedIndex);
 }
 
-const out = decodeText(b64, key);
-            plainEl.value = out;
-            setStatus(encodedStatus, "Decoded ✓");
-          }catch(err){
-            setStatus(encodedStatus, "Error: " + (err.message || err), false);
-          }
-        });
 
-        copyPlain.addEventListener("click", async ()=>{
-          try {
-            await navigator.clipboard.writeText(plainEl.value || "");
-            setStatus(plainStatus, "Copied");
-          } catch(e){
-            setStatus(plainStatus, "Copier failed", false);
-          }
-        });
-        copyEncoded.addEventListener("click", async ()=>{
-          try {
-            await navigator.clipboard.writeText(encodedEl.value || "");
-            setStatus(encodedStatus, "Copied");
-          } catch(e){
-            setStatus(encodedStatus, "Copier failed", false);
-          }
-        });
+function unshiftScalar(codePoint, shift) {
 
-        clearPlain.addEventListener("click", ()=> plainEl.value = "");
-        clearEncoded.addEventListener("click", ()=> encodedEl.value = "");
+  const index = scalarToIndex(codePoint);
 
-        exampleBtn.addEventListener("click", ()=>{
-          plainEl.value = "Hello — exemple: 1234 € ☺";
-          setStatus(plainStatus, "Example inserted");
-        });
+  const shiftedIndex =
+    (index - shift + UNICODE_SCALARS) % UNICODE_SCALARS;
 
-        downloadBtn.addEventListener("click", ()=>{
-          const data = encodedEl.value;
-          if (!data) { setStatus(encodedStatus, "Nothing to download", false); return; }
-          const blob = new Blob([data], {type:"text/plain;charset=utf-8"});
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "encoded.txt";
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          URL.revokeObjectURL(url);
-          setStatus(encodedStatus, "Downloaded");
-        });
+  return indexToScalar(shiftedIndex);
+}
 
-        // keyboard shortcuts
-        document.addEventListener("keydown", (e)=>{
-          if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === "e"){ e.preventDefault(); encodeBtn.click(); }
-          if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === "d"){ e.preventDefault(); decodeBtn.click(); }
-        });
 
-      })();
-    </script>
-  </body>
+/* ============================================================
+ * Hash de la clé
+ * ============================================================
+ *
+ * FNV-1a 32 bits.
+ *
+ * Ce n'est pas présenté comme du chiffrement cryptographique.
+ * Il sert ici à transformer la clé en état initial déterministe.
+ */
+
+function hashKey(bytes, initial) {
+
+  let hash = initial >>> 0;
+
+  for (let i = 0; i < bytes.length; i++) {
+
+    hash ^= bytes[i];
+
+    hash =
+      Math.imul(hash, 0x01000193) >>> 0;
+  }
+
+  return hash >>> 0;
+}
+
+
+/* ============================================================
+ * Mélange 32 bits
+ * ============================================================ */
+
+function mix32(value) {
+
+  value >>>= 0;
+
+  value ^= value >>> 16;
+  value = Math.imul(value, 0x85EBCA6B) >>> 0;
+
+  value ^= value >>> 13;
+  value = Math.imul(value, 0xC2B2AE35) >>> 0;
+
+  value ^= value >>> 16;
+
+  return value >>> 0;
+}
+
+
+/* ============================================================
+ * Générateur déterministe basé UNIQUEMENT sur la clé
+ * ============================================================ */
+
+function createGenerator(key) {
+
+  const bytes =
+    new TextEncoder().encode(key);
+
+  if (bytes.length === 0) {
+    throw new Error("La clé est vide.");
+  }
+
+  let stateA =
+    hashKey(bytes, 0x811C9DC5);
+
+  let stateB =
+    hashKey(bytes, 0x12345678);
+
+  stateA =
+    mix32(stateA ^ bytes.length);
+
+  stateB =
+    mix32(stateB ^ (bytes.length * 0x9E3779B9));
+
+  /*
+   * Retourne un nombre pseudo-aléatoire 32 bits.
+   *
+   * La suite obtenue est entièrement déterminée
+   * par la clé.
+   */
+
+  return function nextRandom() {
+
+    stateA =
+      (stateA + 0x6D2B79F5) >>> 0;
+
+    let t = stateA;
+
+    t =
+      Math.imul(
+        t ^ (t >>> 15),
+        t | 1
+      ) >>> 0;
+
+    t ^=
+      t +
+      Math.imul(
+        t ^ (t >>> 7),
+        t | 61
+      );
+
+    t >>>= 0;
+
+    stateB =
+      (stateB + 0x9E3779B9) >>> 0;
+
+    let u = stateB;
+
+    u =
+      Math.imul(
+        u ^ (u >>> 16),
+        0x21F0AAAD
+      ) >>> 0;
+
+    u =
+      Math.imul(
+        u ^ (u >>> 15),
+        0x735A2D97
+      ) >>> 0;
+
+    u ^=
+      u >>> 15;
+
+    u >>>= 0;
+
+    /*
+     * Mélange des deux états.
+     */
+
+    return (t ^ u) >>> 0;
+  };
+}
+
+
+/* ============================================================
+ * Génération d'un décalage Unicode
+ * ============================================================ */
+
+function nextShift(generator) {
+
+  return generator() % UNICODE_SCALARS;
+}
+
+
+/* ============================================================
+ * Transformation du texte
+ * ============================================================ */
+
+function transformText(text, key, reverse) {
+
+  const generator =
+    createGenerator(key);
+
+  let result = "";
+
+  /*
+   * for...of parcourt les code points Unicode,
+   * et pas simplement les unités UTF-16.
+   *
+   * Cela permet notamment de gérer correctement :
+   * - les accents ;
+   * - les emojis ;
+   * - les caractères asiatiques ;
+   * - les caractères hors BMP.
+   */
+
+  for (const character of text) {
+
+    const codePoint =
+      character.codePointAt(0);
+
+    const shift =
+      nextShift(generator);
+
+    const transformedCodePoint =
+      reverse
+        ? unshiftScalar(codePoint, shift)
+        : shiftScalar(codePoint, shift);
+
+    result +=
+      String.fromCodePoint(transformedCodePoint);
+  }
+
+  return result;
+}
+
+
+/* ============================================================
+ * Base64 UTF-8
+ * ============================================================ */
+
+function utf8ToBase64(text) {
+
+  const bytes =
+    new TextEncoder().encode(text);
+
+  let binary = "";
+
+  /*
+   * Conversion par morceaux pour éviter de dépasser
+   * la limite d'arguments de String.fromCharCode.
+   */
+
+  const CHUNK_SIZE = 0x8000;
+
+  for (
+    let i = 0;
+    i < bytes.length;
+    i += CHUNK_SIZE
+  ) {
+
+    const chunk =
+      bytes.subarray(
+        i,
+        Math.min(i + CHUNK_SIZE, bytes.length)
+      );
+
+    binary +=
+      String.fromCharCode(...chunk);
+  }
+
+  return btoa(binary);
+}
+
+
+function base64ToUtf8(base64) {
+
+  /*
+   * atob() vérifie la structure Base64.
+   */
+
+  const binary =
+    atob(base64);
+
+  const bytes =
+    new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] =
+      binary.charCodeAt(i);
+  }
+
+  /*
+   * fatal:true permet de détecter une séquence UTF-8 invalide
+   * au lieu de la remplacer silencieusement.
+   */
+
+  const decoder =
+    new TextDecoder("utf-8", {
+      fatal: true
+    });
+
+  return decoder.decode(bytes);
+}
+
+
+/* ============================================================
+ * Encodage
+ * ============================================================ */
+
+function encodeText(text, key) {
+
+  if (!key) {
+    throw new Error("Veuillez entrer une clé.");
+  }
+
+  /*
+   * La clé n'est PAS ajoutée au texte.
+   *
+   * Les décalages sont générés directement à partir de la clé.
+   */
+
+  const transformed =
+    transformText(
+      text,
+      key,
+      false
+    );
+
+  /*
+   * Seul le texte transformé est stocké.
+   */
+
+  return utf8ToBase64(transformed);
+}
+
+
+/* ============================================================
+ * Décodage
+ * ============================================================ */
+
+function decodeText(encoded, key) {
+
+  if (!key) {
+    throw new Error("Veuillez entrer une clé.");
+  }
+
+  /*
+   * On commence par décoder le Base64.
+   */
+
+  const transformed =
+    base64ToUtf8(encoded);
+
+  /*
+   * Puis on régénère exactement la même suite de décalages
+   * grâce à la clé fournie.
+   *
+   * Si la clé est mauvaise, elle produira simplement une autre
+   * suite de décalages.
+   */
+
+  return transformText(
+    transformed,
+    key,
+    true
+  );
+}
+
+
+/* ============================================================
+ * Statut
+ * ============================================================ */
+
+function setStatus(message, error = false) {
+
+  status.textContent = message;
+
+  /*
+   * On évite d'imposer une couleur particulière au thème.
+   * L'opacité est suffisante pour distinguer le message.
+   */
+
+  status.style.fontWeight =
+    error ? "600" : "normal";
+}
+
+
+/* ============================================================
+ * Encoder
+ * ============================================================ */
+
+encodeBtn.addEventListener("click", () => {
+
+  try {
+
+    const text =
+      plainInput.value;
+
+    const key =
+      keyInput.value;
+
+    const result =
+      encodeText(
+        text,
+        key
+      );
+
+    encodedInput.value =
+      result;
+
+    setStatus(
+      "Texte encodé avec succès."
+    );
+
+  } catch (error) {
+
+    setStatus(
+      "Erreur d'encodage : " +
+      error.message,
+      true
+    );
+  }
+});
+
+
+/* ============================================================
+ * Décoder
+ * ============================================================ */
+
+decodeBtn.addEventListener("click", () => {
+
+  try {
+
+    const encoded =
+      encodedInput.value.trim();
+
+    const key =
+      keyInput.value;
+
+    if (!encoded) {
+      throw new Error(
+        "Aucun texte encodé à décoder."
+      );
+    }
+
+    const result =
+      decodeText(
+        encoded,
+        key
+      );
+
+    plainInput.value =
+      result;
+
+    setStatus(
+      "Texte décodé avec succès."
+    );
+
+  } catch (error) {
+
+    /*
+     * Mauvais Base64 ou UTF-8 invalide :
+     * erreur de décodage.
+     *
+     * Une mauvaise clé qui donne malgré tout
+     * un Unicode valide n'est PAS une erreur.
+     */
+
+    setStatus(
+      "Erreur de décodage : " +
+      error.message,
+      true
+    );
+  }
+});
+
+
+/* ============================================================
+ * Effacer
+ * ============================================================ */
+
+clearBtn.addEventListener("click", () => {
+
+  plainInput.value = "";
+  encodedInput.value = "";
+  keyInput.value = "";
+
+  setStatus("");
+});
+
+
+/* ============================================================
+ * Copier
+ * ============================================================ */
+
+copyBtn.addEventListener("click", async () => {
+
+  try {
+
+    const text =
+      encodedInput.value;
+
+    if (!text) {
+      throw new Error(
+        "Rien à copier."
+      );
+    }
+
+    await navigator.clipboard.writeText(text);
+
+    setStatus(
+      "Texte encodé copié."
+    );
+
+  } catch (error) {
+
+    setStatus(
+      "Impossible de copier le texte.",
+      true
+    );
+  }
+});
+
+
+/* ============================================================
+ * Exemple
+ * ============================================================ */
+
+exampleBtn.addEventListener("click", () => {
+
+  keyInput.value =
+    "ma-cle-secrete";
+
+  plainInput.value =
+    "Bonjour 👋 Ceci est un texte Unicode : éàù — 日本語 — Ελληνικά — العربية — 🚀";
+
+  encodedInput.value = "";
+
+  setStatus(
+    "Exemple chargé."
+  );
+});
+
+
+/* ============================================================
+ * Télécharger
+ * ============================================================ */
+
+downloadBtn.addEventListener("click", () => {
+
+  try {
+
+    const content =
+      encodedInput.value;
+
+    if (!content) {
+      throw new Error(
+        "Aucun texte encodé à télécharger."
+      );
+    }
+
+    const blob =
+      new Blob(
+        [content],
+        {
+          type: "text/plain;charset=utf-8"
+        }
+      );
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement("a");
+
+    link.href = url;
+    link.download =
+      "sssss-plus.txt";
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    URL.revokeObjectURL(url);
+
+    setStatus(
+      "Fichier téléchargé."
+    );
+
+  } catch (error) {
+
+    setStatus(
+      error.message,
+      true
+    );
+  }
+});
+</script>
+
+</body>
 </html>
