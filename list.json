@@ -13,6 +13,17 @@
       "Encodage",
       "Décodage"
     ],
+    "./SSSSP.html": [
+      "Encodage SSSS +",
+      "Système d’encodage amélioré de SSSS, en ajoutant une clef de cryptage.",
+      "SSSS",
+      "SSSS+",
+      "SSSS +",
+      "Encoder",
+      "Décoder",
+      "Encodage",
+      "Décodage"
+    ],
     "./morse.html": [
       "Morse",
       "Découvrez le code Morse et son utilisation historique, notamment dans les communications radio durant la Seconde Guerre mondiale.",
@@ -47,6 +58,11 @@
       "Générateur de drapeaux",
       "Génération infinie de drapeaux",
       "drapeaux"
+    ],
+    "./laws.html": [
+      "Laws Architect",
+      "Outil d'écriture de lois.",
+      "juridique"
     ]
   },
   "newspaper": [
