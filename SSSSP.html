@@ -4,35 +4,28 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Encodeur / Décodeur de SSSS+ | five_lives Github</title>
-
     <link rel="stylesheet" href="./assets/css/header.css" />
     <link rel="stylesheet" href="./assets/css/style.css" />
     <script src="./assets/js/header.js" defer></script>
     <link rel="shortcut icon" href="./assets/favicon.ico" type="image/x-icon">
   </head>
-
   <body>
     <div id="header"></div>
-
     <div class="wrap">
-
-      <!-- Introduction -->
       <div class="card">
         <div>
           <h1>
             Encodeur / Décodeur de SSSS+
+            (scratch-technoval's Secret Symmetrical System)
           </h1>
-
           <p class="lead">
-            Encode et décode du texte Unicode avec une clé déterminant
-            directement les décalages utilisés par le système.
+            Encode et décode avec le système SSSS classique, avec un
+            décalage Unicode supplémentaire déterminé par une clé.
           </p>
         </div>
-
         <div class="small">
           Pas de bibliothèques externes · Fonctionne sans internet
         </div>
-
         <div
           style="margin-top:18px;display:flex;justify-content:flex-end;gap:8px">
           <button id="example">Insert example</button>
@@ -40,140 +33,522 @@
         </div>
       </div>
 
-
-      <!-- Clé -->
-      <div class="card" style="margin-top:18px">
+      <section class="card">
         <label for="key">Clé</label>
-
         <input
           id="key"
           type="text"
+          placeholder="Enter key (leave empty for no Unicode shift)"
           autocomplete="off"
-          placeholder="Enter key"
+          spellcheck="false"
+          style="width:100%;box-sizing:border-box;padding:10px;margin-top:8px"
         />
-
         <div class="footer">
           <div class="note">
-            La clé détermine directement les décalages Unicode.
-            Elle n'est jamais enregistrée dans le texte encodé.
+            La clé détermine les décalages Unicode. Elle n'est jamais stockée
+            dans le texte encodé.
           </div>
-
-          <div id="keyStatus" class="status"></div>
         </div>
-      </div>
+      </section>
 
-
-      <!-- Encodeur / Décodeur -->
       <main class="grid">
-
-        <!-- Texte clair -->
         <section class="card">
           <label for="plain">Plaintext</label>
-
           <textarea
             id="plain"
             placeholder="Enter text to encode or paste decoded output here"></textarea>
-
           <div class="controls">
-            <button id="encodeBtn" class="primary">
-              Encode →
-            </button>
-
-            <button id="clearPlain">
-              Clear
-            </button>
-
-            <button id="copyPlain">
-              Copy
-            </button>
+            <button id="encodeBtn" class="primary">Encode →</button>
+            <button id="clearPlain">Clear</button>
+            <button id="copyPlain">Copy</button>
           </div>
-
           <div class="footer">
             <div class="note">
-              Text is processed as Unicode before encoding.
+              Text will be encoded as UTF-8 before processing.
             </div>
-
             <div id="plainStatus" class="status"></div>
           </div>
         </section>
 
-
-        <!-- Texte encodé -->
         <section class="card">
           <label for="encoded">Encoded (base64)</label>
-
           <textarea
             id="encoded"
             placeholder="Paste base64 payload here to decode"></textarea>
-
           <div class="controls">
-            <button id="decodeBtn" class="revprimary">
-              ← Decode
-            </button>
-
-            <button id="clearEncoded">
-              Clear
-            </button>
-
-            <button id="copyEncoded">
-              Copy
-            </button>
+            <button id="decodeBtn" class="revprimary">← Decode</button>
+            <button id="clearEncoded">Clear</button>
+            <button id="copyEncoded">Copy</button>
           </div>
-
           <div class="footer">
             <div class="note">
-              Structure : base64 du texte Unicode transformé par la clé.
-              Aucun élément de la clé n'est inclus dans le payload.
+              Structure : base 64 du payload SSSS classique, dont les codes
+              Unicode ont éventuellement été décalés par la clé.
             </div>
-
             <div id="encodedStatus" class="status"></div>
           </div>
         </section>
-
       </main>
     </div>
 
     <div id="footer"></div>
 
-
     <script>
       (() => {
-        "use strict";
-
-
-        /* ============================================================
-         * CONSTANTES UNICODE
-         * ============================================================ */
+        const PRINTABLE_START = 32;
+        const PRINTABLE_COUNT = 95;
+        const printableChars = Array.from(
+          {length: PRINTABLE_COUNT},
+          (_, i) => String.fromCharCode(PRINTABLE_START + i)
+        );
 
         /*
-         * Unicode contient 0x110000 valeurs possibles.
+         * Espace des codes Unicode valides.
          *
-         * La plage D800-DFFF correspond aux surrogate code points
-         * et ne constitue pas des Unicode scalar values.
-         *
-         * On travaille donc sur :
-         *
-         * 0x110000 - 0x800 = 0x10F800
-         *
-         * valeurs Unicode valides.
+         * Les surrogates UTF-16 (D800-DFFF) ne sont pas des code points
+         * Unicode valides isolément. On les retire donc de l'espace de
+         * permutation afin que chaque décalage reste parfaitement réversible.
          */
-
-        const UNICODE_SCALARS = 0x10F800;
         const SURROGATE_START = 0xD800;
         const SURROGATE_COUNT = 0x800;
+        const UNICODE_COUNT = 0x110000 - SURROGATE_COUNT;
 
+        function randInt(min, max){
+          return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
 
-        /* ============================================================
-         * DOM
-         * ============================================================ */
+        function shiftPrintable(ch, shift){
+          const code = ch.charCodeAt(0) - PRINTABLE_START;
+          return String.fromCharCode(
+            ((code + shift) % PRINTABLE_COUNT) + PRINTABLE_START
+          );
+        }
 
-        const keyEl = document.getElementById("key");
+        function unshiftPrintable(ch, shift){
+          const code = ch.charCodeAt(0) - PRINTABLE_START;
+          return String.fromCharCode(
+            ((code - shift) % PRINTABLE_COUNT + PRINTABLE_COUNT)
+              % PRINTABLE_COUNT + PRINTABLE_START
+          );
+        }
+
+        function utf8ToBase64(u8){
+          let binary = '';
+          const chunk = 0x8000;
+
+          for (let i = 0; i < u8.length; i += chunk){
+            binary += String.fromCharCode.apply(
+              null,
+              u8.subarray(i, i + chunk)
+            );
+          }
+
+          return btoa(binary);
+        }
+
+        function base64ToUtf8(b64){
+          const binary = atob(b64);
+          const len = binary.length;
+          const bytes = new Uint8Array(len);
+
+          for (let i = 0; i < len; i++){
+            bytes[i] = binary.charCodeAt(i);
+          }
+
+          return bytes;
+        }
+
+        /*
+         * ================================================================
+         * SSSS+
+         * ================================================================
+         *
+         * La clé NE fait pas partie du payload.
+         *
+         * Elle sert uniquement à initialiser un générateur pseudo-aléatoire
+         * déterministe. Le générateur produit ensuite un décalage différent
+         * pour chaque code Unicode.
+         *
+         * Même clé => même suite de décalages.
+         * Clé différente => suite différente.
+         *
+         * Clé vide => tous les décalages valent 0.
+         * ================================================================
+         */
+
+        function createKeyGenerator(key){
+          /*
+           * FNV-1a 32 bits pour transformer la clé en état initial.
+           *
+           * On travaille sur les code points de la clé, et non simplement
+           * sur les caractères UTF-16, afin que les caractères Unicode
+           * de la clé participent correctement au calcul.
+           */
+          let state = 0x811C9DC5;
+
+          for (const ch of key){
+            const cp = ch.codePointAt(0);
+
+            state ^= cp & 0xFF;
+            state = Math.imul(state, 0x01000193);
+
+            state ^= (cp >>> 8) & 0xFF;
+            state = Math.imul(state, 0x01000193);
+
+            state ^= (cp >>> 16) & 0xFF;
+            state = Math.imul(state, 0x01000193);
+
+            state ^= (cp >>> 24) & 0xFF;
+            state = Math.imul(state, 0x01000193);
+          }
+
+          /*
+           * Un état nul est autorisé mathématiquement, mais pour ce
+           * générateur il vaut mieux lui donner un état non nul.
+           */
+          if (state === 0){
+            state = 0x6D2B79F5;
+          }
+
+          return function(){
+            /*
+             * Mulberry32.
+             *
+             * La fonction est entièrement déterministe :
+             * le même état initial donne exactement la même séquence.
+             */
+            state = (state + 0x6D2B79F5) | 0;
+
+            let t = state;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+          };
+        }
+
+        function keyShift(key, index){
+          /*
+           * Une clé vide signifie explicitement :
+           * aucun décalage.
+           */
+          if (!key){
+            return 0;
+          }
+
+          /*
+           * Le générateur est recréé depuis la clé.
+           * On avance jusqu'à la position demandée.
+           *
+           * Cela signifie que le décalage dépend :
+           * - de la clé ;
+           * - de la position du code Unicode.
+           */
+          const random = createKeyGenerator(key);
+
+          let value = 0;
+
+          for (let i = 0; i <= index; i++){
+            value = Math.floor(random() * UNICODE_COUNT);
+          }
+
+          return value;
+        }
+
+        /*
+         * Conversion code point <-> index dans l'espace des Unicode valides.
+         */
+        function scalarToIndex(codePoint){
+          if (
+            codePoint < 0 ||
+            codePoint > 0x10FFFF ||
+            (codePoint >= 0xD800 && codePoint <= 0xDFFF)
+          ){
+            throw new Error("invalid codepoint");
+          }
+
+          if (codePoint < SURROGATE_START){
+            return codePoint;
+          }
+
+          return codePoint - SURROGATE_COUNT;
+        }
+
+        function indexToScalar(index){
+          if (index < 0 || index >= UNICODE_COUNT){
+            throw new Error("invalid shifted codepoint");
+          }
+
+          if (index < SURROGATE_START){
+            return index;
+          }
+
+          return index + SURROGATE_COUNT;
+        }
+
+        function shiftUnicode(codePoint, shift){
+          const index = scalarToIndex(codePoint);
+          const shiftedIndex =
+            (index + shift) % UNICODE_COUNT;
+
+          return indexToScalar(shiftedIndex);
+        }
+
+        function unshiftUnicode(codePoint, shift){
+          const index = scalarToIndex(codePoint);
+
+          const shiftedIndex =
+            ((index - shift) % UNICODE_COUNT + UNICODE_COUNT)
+            % UNICODE_COUNT;
+
+          return indexToScalar(shiftedIndex);
+        }
+
+        /*
+         * ================================================================
+         * SSSS CLASSIQUE
+         * ================================================================
+         *
+         * Cette partie reste basée sur ton SSSS d'origine.
+         *
+         * La seule différence est que les codes Unicode produits par SSSS
+         * peuvent ensuite recevoir le décalage SSSS+.
+         * ================================================================
+         */
+
+        function encodeText(text, key){
+          const initial_shift =
+            randInt(0, PRINTABLE_COUNT - 1);
+
+          const indicator_len = randInt(2, 4);
+
+          let indicator_original = '';
+
+          for (let i = 0; i < indicator_len; i++){
+            indicator_original += printableChars[
+              randInt(0, printableChars.length - 1)
+            ];
+          }
+
+          const stored_indicator =
+            indicator_original[0] +
+            Array.from(indicator_original.slice(1))
+              .map(c => shiftPrintable(c, initial_shift))
+              .join('');
+
+          let total_shift = 0;
+
+          for (const c of indicator_original){
+            total_shift += c.codePointAt(0);
+          }
+
+          const hexParts = [];
+
+          /*
+           * Le générateur de clé est créé UNE SEULE FOIS.
+           *
+           * C'est important : chaque code Unicode reçoit le prochain
+           * élément de la séquence déterminée par la clé.
+           */
+          const random = key
+            ? createKeyGenerator(key)
+            : null;
+
+          let position = 0;
+
+          for (const ch of text){
+            const originalCodePoint = ch.codePointAt(0);
+
+            /*
+             * Étape SSSS classique.
+             */
+            let shiftedValue =
+              originalCodePoint + total_shift;
+
+            /*
+             * Le résultat classique doit rester un code Unicode valide
+             * avant l'étape SSSS+.
+             */
+            if (shiftedValue > 0x10FFFF){
+              throw new Error("invalid codepoint");
+            }
+
+            /*
+             * Étape SSSS+ :
+             * la clé détermine un nouveau décalage.
+             */
+            if (random){
+              const keyShiftValue =
+                Math.floor(random() * UNICODE_COUNT);
+
+              shiftedValue =
+                shiftUnicode(shiftedValue, keyShiftValue);
+            }
+
+            hexParts.push(
+              shiftedValue.toString(16).toUpperCase()
+            );
+
+            position++;
+          }
+
+          /*
+           * Le format du payload reste celui du SSSS classique :
+           *
+           * [initial_shift][indicator]\n[HEX,HEX,HEX,...]
+           *
+           * Aucun élément supplémentaire n'est ajouté pour la clé.
+           */
+          const payloadStr =
+            String.fromCharCode(initial_shift) +
+            stored_indicator +
+            "\n" +
+            hexParts.join(",");
+
+          const encoder = new TextEncoder();
+          const u8 = encoder.encode(payloadStr);
+
+          return utf8ToBase64(u8);
+        }
+
+        function decodeText(b64, key){
+          try{
+            const bytes = base64ToUtf8(b64);
+
+            /*
+             * fatal:true permet de détecter une séquence UTF-8 invalide
+             * au lieu de la remplacer silencieusement par U+FFFD.
+             */
+            const decoder = new TextDecoder("utf-8", {
+              fatal: true
+            });
+
+            const decodedStr = decoder.decode(bytes);
+
+            if (decodedStr.length === 0){
+              throw new Error("empty payload");
+            }
+
+            const initial_shift =
+              decodedStr.charCodeAt(0);
+
+            if (
+              initial_shift < 0 ||
+              initial_shift >= PRINTABLE_COUNT
+            ){
+              throw new Error("invalid initial shift");
+            }
+
+            const nl = decodedStr.indexOf("\n");
+
+            if (nl === -1){
+              throw new Error("missing newline separator");
+            }
+
+            const stored_indicator =
+              decodedStr.slice(1, nl);
+
+            if (stored_indicator.length === 0){
+              throw new Error("missing indicator");
+            }
+
+            const indicator_original =
+              stored_indicator[0] +
+              Array.from(stored_indicator.slice(1))
+                .map(c => unshiftPrintable(c, initial_shift))
+                .join('');
+
+            let total_shift = 0;
+
+            for (const c of indicator_original){
+              total_shift += c.codePointAt(0);
+            }
+
+            const hex_part =
+              decodedStr.slice(nl + 1).trim();
+
+            if (hex_part === ""){
+              return "";
+            }
+
+            const parts = hex_part.split(",");
+
+            /*
+             * Même générateur que pendant l'encodage.
+             */
+            const random = key
+              ? createKeyGenerator(key)
+              : null;
+
+            const chars = [];
+
+            for (let position = 0; position < parts.length; position++){
+              const part = parts[position].trim();
+
+              if (part === ""){
+                throw new Error("invalid hexadecimal data");
+              }
+
+              if (!/^[0-9a-fA-F]+$/.test(part)){
+                throw new Error("invalid hexadecimal data");
+              }
+
+              let code = parseInt(part, 16);
+
+              if (
+                !Number.isInteger(code) ||
+                code < 0 ||
+                code > 0x10FFFF
+              ){
+                throw new Error("invalid codepoint");
+              }
+
+              /*
+               * Étape inverse SSSS+.
+               *
+               * Avec une clé vide, cette partie ne fait absolument rien.
+               */
+              if (random){
+                const keyShiftValue =
+                  Math.floor(random() * UNICODE_COUNT);
+
+                code =
+                  unshiftUnicode(code, keyShiftValue);
+              }
+
+              /*
+               * Étape inverse du SSSS classique.
+               */
+              code -= total_shift;
+
+              if (
+                code < 0 ||
+                code > 0x10FFFF ||
+                (code >= 0xD800 && code <= 0xDFFF)
+              ){
+                throw new Error("invalid codepoint");
+              }
+
+              chars.push(
+                String.fromCodePoint(code)
+              );
+            }
+
+            return chars.join("");
+
+          }catch(e){
+            throw e;
+          }
+        }
 
         const plainEl =
           document.getElementById("plain");
 
         const encodedEl =
           document.getElementById("encoded");
+
+        const keyEl =
+          document.getElementById("key");
 
         const encodeBtn =
           document.getElementById("encodeBtn");
@@ -199,861 +574,198 @@
         const encodedStatus =
           document.getElementById("encodedStatus");
 
-        const keyStatus =
-          document.getElementById("keyStatus");
-
         const exampleBtn =
           document.getElementById("example");
 
         const downloadBtn =
           document.getElementById("download");
 
-
-        /* ============================================================
-         * UNICODE <-> INDEX
-         * ============================================================ */
-
-        /*
-         * On retire virtuellement les surrogate code points afin
-         * d'obtenir un espace Unicode continu et parfaitement
-         * réversible.
-         */
-
-        function scalarToIndex(codePoint) {
-          if (codePoint < SURROGATE_START) {
-            return codePoint;
-          }
-
-          return codePoint - SURROGATE_COUNT;
-        }
-
-
-        function indexToScalar(index) {
-          if (index < SURROGATE_START) {
-            return index;
-          }
-
-          return index + SURROGATE_COUNT;
-        }
-
-
-        /* ============================================================
-         * DÉCALAGE UNICODE
-         * ============================================================ */
-
-        function shiftScalar(codePoint, shift) {
-          const index =
-            scalarToIndex(codePoint);
-
-          const shiftedIndex =
-            (index + shift) % UNICODE_SCALARS;
-
-          return indexToScalar(shiftedIndex);
-        }
-
-
-        function unshiftScalar(codePoint, shift) {
-          const index =
-            scalarToIndex(codePoint);
-
-          const shiftedIndex =
-            (index - shift + UNICODE_SCALARS) %
-            UNICODE_SCALARS;
-
-          return indexToScalar(shiftedIndex);
-        }
-
-
-        /* ============================================================
-         * HASH DE LA CLÉ
-         * ============================================================ */
-
-        function hashKey(bytes, initial) {
-          let hash =
-            initial >>> 0;
-
-          for (let i = 0; i < bytes.length; i++) {
-            hash ^= bytes[i];
-
-            hash =
-              Math.imul(
-                hash,
-                0x01000193
-              ) >>> 0;
-          }
-
-          return hash >>> 0;
-        }
-
-
-        /* ============================================================
-         * MIXAGE 32 BITS
-         * ============================================================ */
-
-        function mix32(value) {
-          value >>>= 0;
-
-          value ^=
-            value >>> 16;
-
-          value =
-            Math.imul(
-              value,
-              0x85EBCA6B
-            ) >>> 0;
-
-          value ^=
-            value >>> 13;
-
-          value =
-            Math.imul(
-              value,
-              0xC2B2AE35
-            ) >>> 0;
-
-          value ^=
-            value >>> 16;
-
-          return value >>> 0;
-        }
-
-
-        /* ============================================================
-         * GÉNÉRATEUR DÉTERMINISTE
-         * ============================================================ */
-
-        /*
-         * Cette fonction est le cœur du SSSS+.
-         *
-         * La suite produite dépend UNIQUEMENT de la clé.
-         *
-         * Pour une même clé :
-         *
-         *     caractère 1 -> même décalage
-         *     caractère 2 -> même décalage
-         *     caractère 3 -> même décalage
-         *     etc.
-         *
-         * Le générateur n'est jamais enregistré dans le résultat.
-         */
-
-        function createGenerator(key) {
-          const bytes =
-            new TextEncoder().encode(key);
-
-          if (bytes.length === 0) {
-            throw new Error("La clé est vide.");
-          }
-
-          let stateA =
-            hashKey(
-              bytes,
-              0x811C9DC5
-            );
-
-          let stateB =
-            hashKey(
-              bytes,
-              0x12345678
-            );
-
-          stateA =
-            mix32(
-              stateA ^ bytes.length
-            );
-
-          stateB =
-            mix32(
-              stateB ^
-              Math.imul(
-                bytes.length,
-                0x9E3779B9
-              )
-            );
-
-
-          return function nextRandom() {
-
-            stateA =
-              (
-                stateA +
-                0x6D2B79F5
-              ) >>> 0;
-
-            let t =
-              stateA;
-
-            t =
-              Math.imul(
-                t ^ (t >>> 15),
-                t | 1
-              ) >>> 0;
-
-            t ^=
-              t +
-              Math.imul(
-                t ^ (t >>> 7),
-                t | 61
-              );
-
-            t >>>= 0;
-
-
-            stateB =
-              (
-                stateB +
-                0x9E3779B9
-              ) >>> 0;
-
-            let u =
-              stateB;
-
-            u =
-              Math.imul(
-                u ^ (u >>> 16),
-                0x21F0AAAD
-              ) >>> 0;
-
-            u =
-              Math.imul(
-                u ^ (u >>> 15),
-                0x735A2D97
-              ) >>> 0;
-
-            u ^=
-              u >>> 15;
-
-            u >>>= 0;
-
-
-            return (
-              t ^ u
-            ) >>> 0;
-          };
-        }
-
-
-        /* ============================================================
-         * DÉCALAGE PRODUIT PAR LA CLÉ
-         * ============================================================ */
-
-        function nextShift(generator) {
-          return (
-            generator() %
-            UNICODE_SCALARS
-          );
-        }
-
-
-        /* ============================================================
-         * TRANSFORMATION
-         * ============================================================ */
-
-        function transformText(
-          text,
-          key,
-          reverse
-        ) {
-          const generator =
-            createGenerator(key);
-
-          let result = "";
-
-
-          /*
-           * for...of parcourt les code points Unicode.
-           *
-           * Un emoji comme 🚀 est donc traité comme un seul
-           * caractère et reçoit un seul décalage.
-           */
-
-          for (const character of text) {
-
-            const codePoint =
-              character.codePointAt(0);
-
-            const shift =
-              nextShift(generator);
-
-            const transformed =
-              reverse
-                ? unshiftScalar(
-                    codePoint,
-                    shift
-                  )
-                : shiftScalar(
-                    codePoint,
-                    shift
-                  );
-
-            result +=
-              String.fromCodePoint(
-                transformed
-              );
-          }
-
-          return result;
-        }
-
-
-        /* ============================================================
-         * UTF-8 -> BASE64
-         * ============================================================ */
-
-        function utf8ToBase64(text) {
-
-          const bytes =
-            new TextEncoder().encode(text);
-
-          let binary = "";
-
-          const chunkSize =
-            0x8000;
-
-
-          for (
-            let i = 0;
-            i < bytes.length;
-            i += chunkSize
-          ) {
-
-            const chunk =
-              bytes.subarray(
-                i,
-                Math.min(
-                  i + chunkSize,
-                  bytes.length
-                )
-              );
-
-            binary +=
-              String.fromCharCode(
-                ...chunk
-              );
-          }
-
-
-          return btoa(binary);
-        }
-
-
-        /* ============================================================
-         * BASE64 -> UTF-8
-         * ============================================================ */
-
-        function base64ToUtf8(base64) {
-
-          /*
-           * atob() déclenche une erreur si le Base64 est invalide.
-           */
-
-          const binary =
-            atob(base64);
-
-          const bytes =
-            new Uint8Array(
-              binary.length
-            );
-
-
-          for (
-            let i = 0;
-            i < binary.length;
-            i++
-          ) {
-            bytes[i] =
-              binary.charCodeAt(i);
-          }
-
-
-          /*
-           * fatal:true permet de détecter une véritable erreur
-           * UTF-8 au lieu de remplacer silencieusement les octets
-           * invalides.
-           */
-
-          const decoder =
-            new TextDecoder(
-              "utf-8",
-              {
-                fatal: true
-              }
-            );
-
-
-          return decoder.decode(bytes);
-        }
-
-
-        /* ============================================================
-         * ENCODAGE
-         * ============================================================ */
-
-        function encodeText(
-          text,
-          key
-        ) {
-
-          if (!key) {
-            throw new Error(
-              "Veuillez entrer une clé."
-            );
-          }
-
-
-          /*
-           * IMPORTANT :
-           *
-           * La clé n'est PAS ajoutée au texte.
-           *
-           * Les décalages sont calculés directement à partir
-           * de la clé.
-           */
-
-          const transformed =
-            transformText(
-              text,
-              key,
-              false
-            );
-
-
-          /*
-           * Le résultat contient uniquement le texte transformé.
-           *
-           * Aucune clé.
-           * Aucun tableau de décalages.
-           * Aucune signature.
-           */
-
-          return utf8ToBase64(
-            transformed
-          );
-        }
-
-
-        /* ============================================================
-         * DÉCODAGE
-         * ============================================================ */
-
-        function decodeText(
-          base64,
-          key
-        ) {
-
-          if (!key) {
-            throw new Error(
-              "Veuillez entrer une clé."
-            );
-          }
-
-
-          /*
-           * Première étape :
-           * Base64 -> texte Unicode transformé.
-           */
-
-          const transformed =
-            base64ToUtf8(
-              base64
-            );
-
-
-          /*
-           * Deuxième étape :
-           *
-           * La même clé recrée le même générateur,
-           * donc exactement la même suite de décalages.
-           *
-           * On applique alors le décalage inverse.
-           *
-           * AUCUNE vérification de signature ou de clé.
-           */
-
-          return transformText(
-            transformed,
-            key,
-            true
-          );
-        }
-
-
-        /* ============================================================
-         * STATUTS
-         * ============================================================ */
-
-        function setStatus(
-          element,
-          message,
-          ok = true
-        ) {
-
-          element.textContent =
-            message;
-
-          element.style.color =
-            ok
-              ? ""
-              : "#ff7b7b";
-
+        function setStatus(el, msg, ok=true){
+          el.textContent = msg;
+          el.style.color = ok ? "" : "#ff7b7b";
 
           setTimeout(() => {
-
-            if (
-              element.textContent ===
-              message
-            ) {
-              element.textContent = "";
+            if (el.textContent === msg){
+              el.textContent = "";
             }
-
           }, 5000);
         }
 
+        encodeBtn.addEventListener("click", () => {
+          try{
+            const txt = plainEl.value || "";
+            const key = keyEl.value || "";
 
-        /* ============================================================
-         * ENCODER
-         * ============================================================ */
+            const out = encodeText(txt, key);
 
-        encodeBtn.addEventListener(
-          "click",
-          () => {
-
-            try {
-
-              const text =
-                plainEl.value || "";
-
-              const key =
-                keyEl.value;
-
-              const output =
-                encodeText(
-                  text,
-                  key
-                );
-
-              encodedEl.value =
-                output;
-
-              setStatus(
-                plainStatus,
-                "Encoded ✓"
-              );
-
-            } catch (err) {
-
-              setStatus(
-                plainStatus,
-                "Error: " +
-                (
-                  err.message ||
-                  err
-                ),
-                false
-              );
-            }
-          }
-        );
-
-
-        /* ============================================================
-         * DÉCODER
-         * ============================================================ */
-
-        decodeBtn.addEventListener(
-          "click",
-          () => {
-
-            try {
-
-              const base64 =
-                encodedEl.value.trim();
-
-              const key =
-                keyEl.value;
-
-
-              if (!base64) {
-
-                setStatus(
-                  encodedStatus,
-                  "No input",
-                  false
-                );
-
-                return;
-              }
-
-
-              const output =
-                decodeText(
-                  base64,
-                  key
-                );
-
-              plainEl.value =
-                output;
-
-              setStatus(
-                encodedStatus,
-                "Decoded ✓"
-              );
-
-            } catch (err) {
-
-              /*
-               * Ici, aucune tentative n'est faite pour déterminer
-               * si la clé est correcte.
-               *
-               * Si le Base64 ou l'UTF-8 est invalide, on signale
-               * simplement une erreur de décodage.
-               *
-               * Avec une mauvaise clé, si le résultat est un Unicode
-               * valide, il est affiché normalement.
-               */
-
-              setStatus(
-                encodedStatus,
-                "Decoding error: " +
-                (
-                  err.message ||
-                  err
-                ),
-                false
-              );
-            }
-          }
-        );
-
-
-        /* ============================================================
-         * COPIER LE TEXTE CLAIR
-         * ============================================================ */
-
-        copyPlain.addEventListener(
-          "click",
-          async () => {
-
-            try {
-
-              await navigator.clipboard.writeText(
-                plainEl.value || ""
-              );
-
-              setStatus(
-                plainStatus,
-                "Copied"
-              );
-
-            } catch (e) {
-
-              setStatus(
-                plainStatus,
-                "Copy failed",
-                false
-              );
-            }
-          }
-        );
-
-
-        /* ============================================================
-         * COPIER LE TEXTE ENCODÉ
-         * ============================================================ */
-
-        copyEncoded.addEventListener(
-          "click",
-          async () => {
-
-            try {
-
-              await navigator.clipboard.writeText(
-                encodedEl.value || ""
-              );
-
-              setStatus(
-                encodedStatus,
-                "Copied"
-              );
-
-            } catch (e) {
-
-              setStatus(
-                encodedStatus,
-                "Copy failed",
-                false
-              );
-            }
-          }
-        );
-
-
-        /* ============================================================
-         * EFFACER TEXTE CLAIR
-         * ============================================================ */
-
-        clearPlain.addEventListener(
-          "click",
-          () => {
-
-            plainEl.value = "";
+            encodedEl.value = out;
 
             setStatus(
               plainStatus,
-              ""
+              "Encoded ✓"
             );
-          }
-        );
 
-
-        /* ============================================================
-         * EFFACER TEXTE ENCODÉ
-         * ============================================================ */
-
-        clearEncoded.addEventListener(
-          "click",
-          () => {
-
-            encodedEl.value = "";
-
-            setStatus(
-              encodedStatus,
-              ""
-            );
-          }
-        );
-
-
-        /* ============================================================
-         * EXEMPLE
-         * ============================================================ */
-
-        exampleBtn.addEventListener(
-          "click",
-          () => {
-
-            keyEl.value =
-              "ma-cle-secrete";
-
-            plainEl.value =
-              "Hello — exemple : 1234 € ☺ 🚀 日本語 العربية Ελληνικά";
-
-            encodedEl.value = "";
-
+          }catch(err){
             setStatus(
               plainStatus,
-              "Example inserted"
-            );
-
-            setStatus(
-              keyStatus,
-              "Key inserted"
+              "Error: " + (err.message || err),
+              false
             );
           }
-        );
+        });
 
+        decodeBtn.addEventListener("click", () => {
+          try{
+            const b64 = encodedEl.value.trim();
+            const key = keyEl.value || "";
 
-        /* ============================================================
-         * TÉLÉCHARGEMENT
-         * ============================================================ */
-
-        downloadBtn.addEventListener(
-          "click",
-          () => {
-
-            const data =
-              encodedEl.value;
-
-
-            if (!data) {
-
+            if (!b64){
               setStatus(
                 encodedStatus,
-                "Nothing to download",
+                "No input",
                 false
               );
-
               return;
             }
 
+            const out = decodeText(b64, key);
 
-            const blob =
-              new Blob(
-                [data],
-                {
-                  type:
-                    "text/plain;charset=utf-8"
-                }
-              );
-
-
-            const url =
-              URL.createObjectURL(
-                blob
-              );
-
-
-            const a =
-              document.createElement(
-                "a"
-              );
-
-            a.href =
-              url;
-
-            a.download =
-              "encoded.txt";
-
-
-            document.body.appendChild(a);
-
-            a.click();
-
-            a.remove();
-
-            URL.revokeObjectURL(
-              url
-            );
-
+            plainEl.value = out;
 
             setStatus(
               encodedStatus,
-              "Downloaded"
+              "Decoded ✓"
+            );
+
+          }catch(err){
+            setStatus(
+              encodedStatus,
+              "erreur de décodage",
+              false
             );
           }
-        );
+        });
 
+        copyPlain.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(
+              plainEl.value || ""
+            );
 
-        /* ============================================================
-         * RACCOURCIS CLAVIER
-         * ============================================================ */
+            setStatus(
+              plainStatus,
+              "Copied"
+            );
 
-        document.addEventListener(
-          "keydown",
-          (e) => {
-
-            if (
-              (e.ctrlKey || e.metaKey) &&
-              e.key.toLowerCase() === "e"
-            ) {
-
-              e.preventDefault();
-
-              encodeBtn.click();
-            }
-
-
-            if (
-              (e.ctrlKey || e.metaKey) &&
-              e.key.toLowerCase() === "d"
-            ) {
-
-              e.preventDefault();
-
-              decodeBtn.click();
-            }
+          } catch(e){
+            setStatus(
+              plainStatus,
+              "Copy failed",
+              false
+            );
           }
+        });
+
+        copyEncoded.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(
+              encodedEl.value || ""
+            );
+
+            setStatus(
+              encodedStatus,
+              "Copied"
+            );
+
+          } catch(e){
+            setStatus(
+              encodedStatus,
+              "Copy failed",
+              false
+            );
+          }
+        });
+
+        clearPlain.addEventListener(
+          "click",
+          () => plainEl.value = ""
         );
+
+        clearEncoded.addEventListener(
+          "click",
+          () => encodedEl.value = ""
+        );
+
+        exampleBtn.addEventListener("click", () => {
+          plainEl.value =
+            "Hello — exemple: 1234 € ☺";
+
+          setStatus(
+            plainStatus,
+            "Example inserted"
+          );
+        });
+
+        downloadBtn.addEventListener("click", () => {
+          const data = encodedEl.value;
+
+          if (!data){
+            setStatus(
+              encodedStatus,
+              "Nothing to download",
+              false
+            );
+            return;
+          }
+
+          const blob = new Blob(
+            [data],
+            {
+              type: "text/plain;charset=utf-8"
+            }
+          );
+
+          const url =
+            URL.createObjectURL(blob);
+
+          const a =
+            document.createElement("a");
+
+          a.href = url;
+          a.download = "encoded.txt";
+
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+
+          URL.revokeObjectURL(url);
+
+          setStatus(
+            encodedStatus,
+            "Downloaded"
+          );
+        });
+
+        /*
+         * Raccourcis clavier
+         */
+        document.addEventListener("keydown", (e) => {
+          if (
+            (e.ctrlKey || e.metaKey) &&
+            e.key.toLowerCase() === "e"
+          ){
+            e.preventDefault();
+            encodeBtn.click();
+          }
+
+          if (
+            (e.ctrlKey || e.metaKey) &&
+            e.key.toLowerCase() === "d"
+          ){
+            e.preventDefault();
+            decodeBtn.click();
+          }
+        });
 
       })();
     </script>
