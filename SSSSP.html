@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Encodeur / Décodeur de SSSS | five_lives Github</title>
+    <title>SSSS+ — Encodeur / Décodeur à clé</title>
     <link rel="stylesheet" href="./assets/css/header.css" />
     <link rel="stylesheet" href="./assets/css/style.css" />
     <script src="./assets/js/header.js" defer></script>
@@ -15,9 +15,8 @@
       <div class="card">
         <div>
           <h1>
-            Encodeur / Décodeur de SSSS (scratch-technoval's Secret Symmetrical
-            System)
-          </h1>
+  SSSS+ — Encodeur / Décodeur à clé
+</h1>
           <p class="lead">
             Encode et décode avec un système complexe composé de plusieurs
             étapes d'encodage.
@@ -32,7 +31,24 @@
           <button id="download">Télécharger le texte encodé (.txt)</button>
         </div>
       </div>
+<section class="card" style="margin-top:18px">
+  <label for="key">Clé de décodage</label>
 
+  <input
+    id="key"
+    type="text"
+    autocomplete="off"
+    placeholder="Entrez la clé pour encoder ou décoder"
+  />
+
+  <div class="footer">
+    <div class="note">
+      La même clé doit être utilisée pour décoder.
+      SSSS+ applique un décalage Unicode déterministe dérivé de cette clé.
+    </div>
+    <div id="keyStatus" class="status"></div>
+  </div>
+</section>
       <main class="grid">
         <section class="card">
           <label for="plain">Texte</label>
@@ -186,8 +202,9 @@
           return out;
         }
 
-        const keyEl = document.getElementById("key");
-        const plainEl = document.getElementById("plain");
+const keyEl = document.getElementById("key");
+const keyStatus = document.getElementById("keyStatus");
+const plainEl = document.getElementById("plain");
         const encodedEl = document.getElementById("encoded");
         const encodeBtn = document.getElementById("encodeBtn");
         const decodeBtn = document.getElementById("decodeBtn");
@@ -208,10 +225,16 @@
 
         encodeBtn.addEventListener("click", ()=>{
           try{
-            const key = keyEl.value;
-            if (!key) { setStatus(keyStatus, "Clé requise", false); keyEl.focus(); return; }
-            const txt = plainEl.value || "";
-            const out = encodeText(txt, key);
+const key = keyEl.value.trim();
+
+if (!key) {
+  setStatus(keyStatus, "Clé requise", false);
+  keyEl.focus();
+  return;
+}
+
+const txt = plainEl.value || "";
+const out = encodeText(txt, key);
             encodedEl.value = out;
             setStatus(plainStatus, "Encoded ✓");
           }catch(err){
@@ -221,11 +244,22 @@
 
         decodeBtn.addEventListener("click", ()=>{
           try{
-            const key = keyEl.value;
-            if (!key) { setStatus(keyStatus, "Clé requise", false); keyEl.focus(); return; }
-            const b64 = encodedEl.value.trim();
-            if (!b64) { setStatus(encodedStatus, "No input", false); return; }
-            const out = decodeText(b64, key);
+const key = keyEl.value.trim();
+
+if (!key) {
+  setStatus(keyStatus, "Clé requise", false);
+  keyEl.focus();
+  return;
+}
+
+const b64 = encodedEl.value.trim();
+
+if (!b64) {
+  setStatus(encodedStatus, "No input", false);
+  return;
+}
+
+const out = decodeText(b64, key);
             plainEl.value = out;
             setStatus(encodedStatus, "Decoded ✓");
           }catch(err){
