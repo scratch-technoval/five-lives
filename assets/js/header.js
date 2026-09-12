@@ -17,7 +17,7 @@ header = `
       </div>
       <a id="importance-4" href="./edf-tempo.html">EDF Tempo</a>
       <a id="importance-4" href="./flags.html">Drapeaux</a>
-      <a id="importance-4" href="./flags.html">Laws Architect</a>
+      <a id="importance-4" href="./laws.html">Laws Architect</a>
       </div>
     </nav>
   </div>
