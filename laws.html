@@ -326,20 +326,7 @@ main { min-width:0; display:flex; flex-direction:column; background:var(--bg); }
 .flag-fr { background:linear-gradient(90deg,#1d4ed8 0 33.33%,#fff 33.33% 66.66%,#ef4444 66.66%); }
 .flag-de { background:linear-gradient(#111 0 33.33%,#d21f3c 33.33% 66.66%,#f4c542 66.66%); }
 .flag-es { background:linear-gradient(#c60b1e 0 25%,#ffc400 25% 75%,#c60b1e 75%); }
-.flag-gb { background:#1f3f95; }
-.flag-gb::before {
-    content:""; position:absolute; inset:0;
-    background:
-      linear-gradient(90deg,transparent 42%,#fff 42% 58%,transparent 58%),
-      linear-gradient(0deg,transparent 38%,#fff 38% 62%,transparent 62%),
-      linear-gradient(90deg,transparent 47%,#d51f35 47% 53%,transparent 53%),
-      linear-gradient(0deg,transparent 43%,#d51f35 43% 57%,transparent 57%);
-}
-.flag-gb::after {
-    content:""; position:absolute; inset:0;
-    background:linear-gradient(33deg,transparent 46%,#fff 46% 54%,transparent 54%),linear-gradient(-33deg,transparent 46%,#fff 46% 54%,transparent 54%);
-    opacity:.95;
-}
+.flag-en { background:linear-gradient(90deg,transparent 38%,#d21f3c 38% 62%,transparent 62%),linear-gradient(0deg,transparent 38%,#d21f3c 38% 62%,transparent 62%),#fff;}
 .lang-btn:hover { border-color:var(--accent); }
 .lang-btn.selected { border-color:var(--accent); background:var(--accent-light); color:var(--accent); font-weight:700; }
 
@@ -612,7 +599,7 @@ main { min-width:0; display:flex; flex-direction:column; background:var(--bg); }
         <label id="settingsLangLabel"></label>
         <div class="lang-options" id="langOptions">
             <button class="lang-btn" data-lang="fr" onclick="setLang('fr')"><span class="flag flag-fr" aria-hidden="true"></span> — Français</button>
-            <button class="lang-btn" data-lang="en" onclick="setLang('en')"><span class="flag flag-gb" aria-hidden="true"></span> — English</button>
+            <button class="lang-btn" data-lang="en" onclick="setLang('en')"><span class="flag flag-en" aria-hidden="true"></span> — English</button>
             <button class="lang-btn" data-lang="de" onclick="setLang('de')"><span class="flag flag-de" aria-hidden="true"></span> — Deutsch</button>
             <button class="lang-btn" data-lang="es" onclick="setLang('es')"><span class="flag flag-es" aria-hidden="true"></span> — Español</button>
         </div>
