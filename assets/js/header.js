@@ -11,11 +11,13 @@ header = `
         <div class="opener"></div>
         <div class="dropdown-menu" role="menu" aria-label="Cryptage menu">
           <a href="./SSSS.html" role="menuitem">Encodage SSSS</a>
+          <a href="./SSSSP.html" role="menuitem">Encodage SSSS +</a>
           <a href="./morse.html" role="menuitem">Morse</a>
         </div>
       </div>
-      <a id="importance-4" href="./edf-tempo.html">Couleur EDF Tempo</a>
-      <a id="importance-4" href="./flags.html">Générateur de drapeaux</a>
+      <a id="importance-4" href="./edf-tempo.html">EDF Tempo</a>
+      <a id="importance-4" href="./flags.html">Drapeaux</a>
+      <a id="importance-4" href="./flags.html">Laws Architect</a>
       </div>
     </nav>
   </div>
