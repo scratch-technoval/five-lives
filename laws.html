@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laws Architect</title>
+<link rel="shortcut icon" href="data:image/svg+xml,%3Csvg%20version%3D'1.1'%20xmlns%3D'http://www.w3.org/2000/svg'%20xmlns:xlink%3D'http://www.w3.org/1999/xlink'%20width%3D'32'%20height%3D'32'%20viewBox%3D'0%2C0%2C32%2C32'%3E%3Cg%20transform%3D'translate(-224%2C-164)'%3E%3Cg%20stroke-miterlimit%3D'10'%3E%3Cpath%20d%3D'M224%2C180c0%2C-8.83656%207.16344%2C-16%2016%2C-16c8.83656%2C0%2016%2C7.16344%2016%2C16c0%2C8.83656%20-7.16344%2C16%20-16%2C16c-8.83656%2C0%20-16%2C-7.16344%20-16%2C-16z'%20fill%3D'%23ffffff'%20stroke%3D'none'%20stroke-width%3D'0'/%3E%3Ctext%20transform%3D'translate(227.46389%2C185.76875)%20scale(0.5%2C0.5)'%20font-size%3D'40'%20xml:space%3D'preserve'%20fill%3D'%2318212b'%20stroke%3D'%2318212b'%20stroke-width%3D'1.8'%20font-family%3D'%26quot%3BArial%26quot%3B%2C%20Sans%20Serif'%20font-weight%3D'normal'%20text-anchor%3D'start'%3E%3Ctspan%20x%3D'0'%20dy%3D'0'%3EL%3C/tspan%3E%3C/text%3E%3Ctext%20transform%3D'translate(240%2C185.76875)%20scale(0.5%2C0.5)'%20font-size%3D'40'%20xml:space%3D'preserve'%20fill%3D'%23315efb'%20stroke%3D'%23315efb'%20stroke-width%3D'1.8'%20font-family%3D'%26quot%3BArial%26quot%3B%2C%20Sans%20Serif'%20font-weight%3D'normal'%20text-anchor%3D'start'%3E%3Ctspan%20x%3D'0'%20dy%3D'0'%3EA%3C/tspan%3E%3C/text%3E%3C/g%3E%3C/g%3E%3C/svg%3E%3C!--rotationCenter:16.00000000000003:16--%3E" type="image/x-icon">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Huninn&display=swap');
+/* ===========================
+   TOKENS & THEMES
+=========================== */
+:root {
+    --bg:#f3f5f7;
+    --panel:#fff;
+    --line:#d9dee5;
+    --text:#18212b;
+    --muted:#687381;
+    --accent:#315efb;
+    --accent-light:#eaf0ff;
+    --accent-dark:#1a3fd4;
+    --danger:#d63b4a;
+    --hover:#f1f3f6;
+    --shadow:0 8px 30px rgba(24,33,43,.08);
+    --radius:9px;
+    --font: "Huninn", "Poppins", sans-serif;
+    --font-accent: Arial, Helvetica, sans-serif;
+    --font-emoji: Arial, Helvetica, sans-serif;
+    --toolbar-active:#315efb;
+    --toolbar-active-bg:#eaf0ff;
+}
+[data-theme="dark"] {
+    --bg:#13181f;
+    --panel:#1c2330;
+    --line:#2a3444;
+    --text:#dde3ec;
+    --muted:#7d8fa5;
+    --accent:#5e82fc;
+    --accent-light:#1e2d55;
+    --accent-dark:#7b9bff;
+    --danger:#f06070;
+    --hover:#232d3d;
+    --shadow:0 8px 30px rgba(0,0,0,.35);
+    --toolbar-active:#5e82fc;
+    --toolbar-active-bg:#1e2d55;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html,body { width:100%; height:100%; font-family:var(--font); color:var(--text); background:var(--bg); }
+body { overflow:hidden; }
+button,input,textarea,select { font:inherit; color:inherit; }
+button { cursor:pointer; }
+button:disabled { opacity:.35; cursor:not-allowed; }
+
+/* SVG icons inherit color */
+.ico { display:inline-block; vertical-align:middle; fill:currentColor; }
+
+/* ===========================
+   SCREENS
+=========================== */
+#homeScreen, #appScreen { width:100%; height:100vh; }
+#homeScreen { display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--bg); position:relative; }
+#appScreen { display:none; }
+
+/* ===========================
+   HOME
+=========================== */
+.home-header {
+    width:100%; padding:16px 28px;
+    display:flex; align-items:center; justify-content:space-between;
+    position:absolute; top:0; left:0;
+    border-bottom:1px solid var(--line);
+    background:var(--panel);
+}
+.home-brand { font-size:16px; font-weight:800; letter-spacing:-.02em; color:var(--text); font-family: var(--font-accent); }
+.home-brand span { color:var(--accent); }
+.home-actions { display:flex; gap:8px; align-items:center; }
+
+.home-body { margin-top:56px; width:100%; display:flex; flex-direction:column; align-items:center; padding:36px 20px 20px; gap:28px; flex:1; overflow-y:auto; }
+
+.home-hero { text-align:center; }
+.home-hero h1 { font-size:42px; font-weight:900; letter-spacing:-.03em; line-height:1.1; color:var(--text); margin-bottom:10px; font-family: var(--font-accent); }
+.home-hero h1 span { color:var(--accent); }
+.home-hero p { color:var(--muted); font-size:15px; max-width:460px; margin:0 auto; line-height:1.6; }
+
+.projects-section { width:min(920px,100%); }
+.projects-section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.projects-section-title { font-weight:700; font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; }
+
+.projects-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+    gap:12px;
+}
+.projects-empty {
+    grid-column:1/-1;
+    text-align:center;
+    padding:32px;
+    color:var(--muted);
+    font-size:14px;
+    border:2px dashed var(--line);
+    border-radius:12px;
+}
+.project-card {
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px;
+    cursor:pointer;
+    transition:border-color .15s, box-shadow .15s, transform .12s;
+    position:relative;
+}
+.project-card:hover { border-color:var(--accent); box-shadow:0 4px 20px rgba(49,94,251,.1); transform:translateY(-2px); }
+.project-card .card-icon { color:var(--accent); margin-bottom:10px; display:block; }
+.project-card .card-name { font-weight:700; font-size:14px; margin-bottom:4px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.project-card .card-desc { color:var(--muted); font-size:12px; line-height:1.5; display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; min-height:2.5em; }
+.project-card .card-meta { margin-top:10px; font-size:11px; color:var(--muted); }
+.project-card .card-menu { position:absolute; top:10px; right:10px; display:flex; gap:3px; opacity:0; transition:opacity .15s; }
+.project-card:hover .card-menu { opacity:1; }
+
+.new-project-card {
+    background:transparent; border:2px dashed var(--line); border-radius:12px; padding:16px;
+    cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:8px; min-height:110px; color:var(--muted);
+    transition:border-color .15s, color .15s; font-size:13px;
+}
+.new-project-card:hover { border-color:var(--accent); color:var(--accent); }
+
+/* ===========================
+   APP LAYOUT
+=========================== */
+.app { width:100%; height:100vh; display:grid; grid-template-columns:310px 370px 1fr; }
+.sidebar, .groups-panel { background:var(--panel); border-right:1px solid var(--line); display:flex; flex-direction:column; min-width:0; overflow-y: auto; }
+main { min-width:0; display:flex; flex-direction:column; background:var(--bg); }
+
+/* ===========================
+   TOPBAR
+=========================== */
+.topbar { height:54px; padding:0 10px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.brand { flex:1; min-width:0; display:flex; flex-direction:column; font-family: var(--font-accent); }
+.brand-name { font-size:14px; font-weight:800; letter-spacing:-.01em; text-decoration: none; color: var(--text); }
+.brand-name span { color:var(--accent); }
+.brand small { display:block; color:var(--muted); font-size:9px; font-weight:normal; letter-spacing:.1em; text-transform:uppercase; margin-top:1px; }
+.code-title { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:600; }
+
+/* Hard-coded home link */
+.home-link-btn {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:30px; height:30px; border-radius:6px; flex-shrink:0;
+    border:1px solid var(--line); background:var(--hover);
+    cursor:pointer; text-decoration:none; color:var(--muted);
+    transition:border-color .15s, color .15s;
+}
+.home-link-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+/* ===========================
+   SEARCH
+=========================== */
+.search { position:relative; margin:10px; }
+.search input { width:100%; padding:8px 10px 8px 32px; border:1px solid var(--line); border-radius:7px; outline:none; background:var(--bg); font-size:13px; }
+.search input:focus { border-color:var(--accent); }
+.search-ico { position:absolute; left:9px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+
+/* ===========================
+   LISTS
+=========================== */
+.list { flex:1; overflow-y:auto; padding:0 6px; }
+.item { display:flex; align-items:center; gap:4px; margin:2px 0; padding:7px; border-radius:var(--radius); cursor:pointer; }
+.item:hover { background:var(--hover); }
+.item.active { background:var(--accent-light); color:var(--accent); }
+.item-symbol { width:20px; text-align:center; color:var(--muted); flex-shrink:0; }
+.item.active .item-symbol { color:var(--accent); }
+.grow { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }
+.count { color:var(--muted); font-size:11px; flex-shrink:0; }
+.item-actions, .group-actions, .article-actions { display:flex; gap:1px; flex-shrink:0; }
+
+/* ===========================
+   BUTTONS
+=========================== */
+.button { padding:6px 11px; border:1px solid var(--line); border-radius:7px; background:var(--panel); font-size:12px; white-space:nowrap; }
+.button:hover { border-color:#b9c2ce; }
+.button.primary { color:#fff; background:var(--accent); border-color:var(--accent); }
+.button.primary:hover { background:var(--accent-dark); border-color:var(--accent-dark); }
+.button.danger { color:var(--danger); }
+.add-button { padding:5px 9px; border:1px solid var(--line); border-radius:6px; background:var(--panel); white-space:nowrap; font-size:12px; }
+.add-button:hover { color:var(--accent); border-color:var(--accent); }
+.small-button { padding:3px 5px; border:0; border-radius:5px; background:transparent; color:var(--muted); font-size:11px; }
+.small-button:hover { background:var(--hover); color:var(--text); }
+.small-button.danger:hover { color:var(--danger); background:rgba(214,59,74,.1); }
+.icon-button { width:30px; height:30px; border:1px solid var(--line); border-radius:6px; background:var(--panel); display:inline-flex; align-items:center; justify-content:center; color:var(--muted); flex-shrink:0; }
+.icon-button:hover { border-color:var(--accent); color:var(--accent); }
+
+/* ===========================
+   GROUPS
+=========================== */
+.group { margin:6px 0 12px; padding:0 2px; }
+.group-header { display:flex; align-items:center; gap:4px; padding:5px; border-radius:7px; }
+.group-header:hover { background:var(--hover); }
+.group-name { flex:1; min-width:0; color:var(--muted); font-size:11px; font-weight:700; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-transform:uppercase; letter-spacing:.07em; }
+.group-description { padding:0 6px 4px; color:var(--muted); font-size:11px; }
+.article { display:flex; align-items:center; gap:4px; margin:1px 0; padding:6px 4px 6px 14px; border-radius:7px; }
+.article:hover { background:var(--hover); }
+.article.active { background:var(--accent-light); color:var(--accent); }
+.article-main { flex:1; min-width:0; display:flex; align-items:center; gap:7px; cursor:pointer; }
+.article-number { min-width:55px; color:var(--muted); font-size:11px; flex-shrink:0; }
+.article-title { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:13px; }
+.add-article-button { margin:2px 0 0 14px; padding:4px 7px; border:0; border-radius:5px; background:transparent; color:var(--muted); font-size:12px; display:flex; align-items:center; gap:4px; }
+.add-article-button:hover { background:var(--hover); color:var(--accent); }
+
+/* ===========================
+   EDITOR
+=========================== */
+.editor-header { height:54px; padding:0 14px; border-bottom:1px solid var(--line); background:var(--panel); display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.breadcrumb { flex:1; min-width:0; color:var(--muted); font-size:12px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.editor-container { width:100%; padding:22px 22px 80px; overflow-y:auto; flex:1; }
+.meta { display:flex; gap:8px; margin-bottom:12px; }
+.meta input { padding:7px 10px; border:1px solid var(--line); border-radius:7px; outline:none; background:var(--panel); font-size:13px; }
+.meta input:first-child { width:130px; }
+.meta input:last-child { flex:1; }
+.meta input:focus { border-color:var(--accent); }
+.title-input { width:100%; margin-bottom:5px; border:0; outline:none; background:transparent; font-size:24px; font-weight:700; color:var(--text); }
+.title-input::placeholder { color:var(--line); }
+.subtitle { margin-bottom:14px; color:var(--muted); font-size:12px; }
+
+/* ===========================
+   TOOLBAR
+=========================== */
+.toolbar {
+    position:sticky; top:0; z-index:2;
+    display:flex; flex-wrap:wrap; gap:2px; padding:5px;
+    border:1px solid var(--line); border-radius:9px;
+    background:var(--panel); box-shadow:0 4px 14px rgba(24,33,43,.05);
+    align-items:center;
+}
+.toolbar-sep { width:1px; height:18px; background:var(--line); margin:0 3px; flex-shrink:0; }
+.tool {
+    padding:5px 7px; border:0; border-radius:6px;
+    background:transparent; color:var(--text); font-size:12px;
+    display:inline-flex; align-items:center; gap:3px;
+    transition:background .1s;
+}
+.tool:hover { background:var(--hover); }
+.tool.active { background:var(--toolbar-active-bg); color:var(--toolbar-active); }
+.heading-select {
+    padding:4px 6px; border:1px solid var(--line); border-radius:6px;
+    background:var(--panel); color:var(--text); font-size:12px;
+    cursor:pointer; outline:none;
+}
+.heading-select:focus { border-color:var(--accent); }
+
+.content {
+    min-height:420px; margin-top:12px; padding:26px 30px;
+    border:1px solid var(--line); border-radius:11px; outline:none;
+    background:var(--panel); box-shadow:var(--shadow);
+    font-family:var(--font); font-size:17px; line-height:1.75; color:var(--text);
+}
+.content:focus { border-color:var(--accent); }
+.content h1 { font-size:2em; margin:.6em 0 .3em; }
+.content h2 { font-size:1.6em; margin:.6em 0 .3em; }
+.content h3 { font-size:1.3em; margin:.5em 0 .25em; }
+.content h4 { font-size:1.1em; margin:.4em 0 .2em; }
+.content h5 { font-size:1em; font-weight:700; margin:.4em 0 .2em; }
+.content h6 { font-size:.9em; font-weight:700; color:var(--muted); margin:.4em 0 .2em; }
+.content blockquote { border-left:3px solid var(--accent); margin:1em 0; padding:.5em 1em; color:var(--muted); font-style:italic; }
+.content hr { border:none; border-top:2px solid var(--line); margin:1.5em 0; }
+.content img { max-width:100%; border-radius:6px; margin:.5em 0; }
+.content ul,.content ol { padding-left:1.5em; }
+.content li { margin:.25em 0; }
+.content table {
+    width:100%; border-collapse:collapse; margin:1em 0;
+    table-layout:fixed; resize:both; overflow:auto; min-width:240px;
+    background:var(--panel);
+}
+.content th,.content td {
+    border:1px solid var(--line); padding:8px 10px; min-width:55px;
+    vertical-align:top; text-align:left; overflow-wrap:anywhere;
+}
+.content th { background:var(--hover); font-weight:700; }
+.content table.table-active { outline:2px solid var(--accent); outline-offset:2px; }
+.table-tools {
+    position:fixed; z-index:20; display:none; align-items:center; gap:4px;
+    padding:4px; border:1px solid var(--line); border-radius:8px;
+    background:var(--panel); box-shadow:var(--shadow);
+}
+.table-tools.visible { display:flex; }
+.table-tools .small-button { min-width:26px; height:25px; }
+.status { margin-top:8px; color:var(--muted); font-size:11px; text-align:right; }
+
+/* ===========================
+   EMPTY
+=========================== */
+.empty { flex:1; display:grid; place-items:center; padding:30px; color:var(--muted); text-align:center; }
+.empty strong { display:block; margin-bottom:8px; color:var(--text); font-size:17px; }
+.empty p { font-size:13px; }
+
+/* ===========================
+   MODALS
+=========================== */
+.modal-background {
+    position:fixed; inset:0; z-index:100;
+    display:none; align-items:center; justify-content:center;
+    background:rgba(13,20,32,.4); backdrop-filter:blur(3px);
+}
+.modal-background.visible { display:flex; }
+.modal { width:min(520px,calc(100% - 30px)); padding:20px; border-radius:13px; background:var(--panel); box-shadow:0 25px 70px rgba(0,0,0,.25); border:1px solid var(--line); }
+.modal h2 { font-size:15px; margin-bottom:14px; display:flex; align-items:center; gap:7px; }
+.modal label { display:block; margin:10px 0 5px; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+.modal input,.modal textarea,.modal select { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:7px; outline:none; background:var(--bg); color:var(--text); font-size:13px; }
+.modal input:focus,.modal textarea:focus,.modal select:focus { border-color:var(--accent); }
+.modal textarea { min-height:75px; resize:vertical; }
+.modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+.move-info { margin-top:9px; padding:8px; border-radius:6px; background:var(--hover); color:var(--muted); font-size:12px; }
+
+/* Settings */
+.settings-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
+.theme-option { padding:9px 10px; border:2px solid var(--line); border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:12px; background:var(--bg); transition:border-color .15s; }
+.theme-option:hover { border-color:var(--accent); }
+.theme-option.selected { border-color:var(--accent); background:var(--accent-light); color:var(--accent); font-weight:600; }
+.theme-swatch { width:16px; height:16px; border-radius:50%; flex-shrink:0; }
+.lang-options { display:flex; gap:7px; flex-wrap:wrap; margin-top:6px; }
+.lang-btn { padding:6px 12px; border:2px solid var(--line); border-radius:6px; cursor:pointer; font-size:12px; background:var(--bg); transition:border-color .15s; }
+.lang-btn span.flag {
+    display:inline-block; width:20px; height:14px; border-radius:2px;
+    vertical-align:-2px; box-shadow:0 0 0 1px rgba(0,0,0,.12);
+    position:relative; overflow:hidden;
+}
+.flag-fr { background:linear-gradient(90deg,#1d4ed8 0 33.33%,#fff 33.33% 66.66%,#ef4444 66.66%); }
+.flag-de { background:linear-gradient(#111 0 33.33%,#d21f3c 33.33% 66.66%,#f4c542 66.66%); }
+.flag-es { background:linear-gradient(#c60b1e 0 25%,#ffc400 25% 75%,#c60b1e 75%); }
+.flag-gb { background:#1f3f95; }
+.flag-gb::before {
+    content:""; position:absolute; inset:0;
+    background:
+      linear-gradient(90deg,transparent 42%,#fff 42% 58%,transparent 58%),
+      linear-gradient(0deg,transparent 38%,#fff 38% 62%,transparent 62%),
+      linear-gradient(90deg,transparent 47%,#d51f35 47% 53%,transparent 53%),
+      linear-gradient(0deg,transparent 43%,#d51f35 43% 57%,transparent 57%);
+}
+.flag-gb::after {
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(33deg,transparent 46%,#fff 46% 54%,transparent 54%),linear-gradient(-33deg,transparent 46%,#fff 46% 54%,transparent 54%);
+    opacity:.95;
+}
+.lang-btn:hover { border-color:var(--accent); }
+.lang-btn.selected { border-color:var(--accent); background:var(--accent-light); color:var(--accent); font-weight:700; }
+
+/* ===========================
+   TOAST
+=========================== */
+.toast { position:fixed; right:18px; bottom:18px; z-index:200; padding:8px 13px; border-radius:8px; color:#fff; background:#17202a; opacity:0; transform:translateY(8px); pointer-events:none; transition:.2s; font-size:13px; }
+.toast.visible { opacity:1; transform:translateY(0); }
+
+/* ===========================
+   SCROLLBAR
+=========================== */
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--line); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--muted); }
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+@media(max-width:1100px) { .app { grid-template-columns:250px 310px 1fr; } }
+@media(max-width:800px) {
+    body { overflow:auto; }
+    .app { height:auto; min-height:100vh; grid-template-columns:1fr; }
+    .sidebar,.groups-panel { min-height:200px; }
+    #appScreen { height:auto; }
+    .editor-container { padding:0 12px 60px; }
+    .content { padding:16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- =====================================================
+     HOME SCREEN
+====================================================== -->
+<div id="homeScreen">
+
+    <div class="home-header">
+        <div class="home-brand">Laws <span>Architect</span></div>
+        <div class="home-actions">
+            <!-- HARD-CODED HOME LINK — remplacez href et le contenu SVG/texte selon votre site -->
+            <a href="https://scratch-technoval.github.io/five-lives" class="home-link-btn" title="Accueil du site" id="siteLinkHome">
+                <svg class="ico" width="14" height="14" viewBox="0 0 16 16"><path d="M8 1L1 7.5h2V15h4v-4h2v4h4V7.5h2z"/></svg>
+            </a>
+            <button class="icon-button" onclick="openSettings()" id="settingsBtnHome" title="">
+                <svg class="ico" width="14" height="14" viewBox="0 0 16 16"><path d="M8 10.5A2.5 2.5 0 1 1 8 5.5a2.5 2.5 0 0 1 0 5zm5.3-1.7-.9-.5a4.6 4.6 0 0 0 0-1.6l.9-.5a.5.5 0 0 0 .2-.65l-1-1.73a.5.5 0 0 0-.64-.18l-.9.52a4.7 4.7 0 0 0-1.38-.8V3a.5.5 0 0 0-.5-.5H6.9a.5.5 0 0 0-.5.5v1.04a4.7 4.7 0 0 0-1.38.8l-.9-.52a.5.5 0 0 0-.64.18L2.48 6.23a.5.5 0 0 0 .18.65l.9.5a4.6 4.6 0 0 0 0 1.6l-.9.52a.5.5 0 0 0-.18.65l1 1.73a.5.5 0 0 0 .64.18l.9-.52c.42.31.88.57 1.38.8V13a.5.5 0 0 0 .5.5h2.2a.5.5 0 0 0 .5-.5v-1.04a4.7 4.7 0 0 0 1.38-.8l.9.52a.5.5 0 0 0 .64-.18l1-1.73a.5.5 0 0 0-.18-.65z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="home-body">
+        <div class="home-hero">
+            <h1>Laws <span>Architect</span></h1>
+            <p id="heroDesc"></p>
+        </div>
+
+        <div class="projects-section">
+            <div class="projects-section-header">
+                <span class="projects-section-title" id="projectsSectionTitle"></span>
+                <button class="button primary" onclick="createNewProject()" id="btnNewProject"></button>
+            </div>
+            <div class="projects-grid" id="projectsGrid"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- =====================================================
+     APP SCREEN
+====================================================== -->
+<div id="appScreen">
+<div class="app">
+
+    <!-- SIDEBAR: Codes -->
+    <aside class="sidebar">
+        <div class="topbar">
+            <div class="brand">
+                <a class="brand-name" onclick="goHome()" href="#">Laws <span>Architect</span></a>
+                <small id="projectNameLabel"></small>
+            </div>
+            <!-- Hard-coded home link (app) -->
+            <a href="https://scratch-technoval.github.io/five-lives" class="home-link-btn" id="siteLinkApp" title="">
+                <svg class="ico" width="13" height="13" viewBox="0 0 16 16"><path d="M8 1L1 7.5h2V15h4v-4h2v4h4V7.5h2z"/></svg>
+            </a>
+            <button class="icon-button" onclick="openSettings()" id="settingsBtnApp" title="">
+                <svg class="ico" width="13" height="13" viewBox="0 0 16 16"><path d="M8 10.5A2.5 2.5 0 1 1 8 5.5a2.5 2.5 0 0 1 0 5zm5.3-1.7-.9-.5a4.6 4.6 0 0 0 0-1.6l.9-.5a.5.5 0 0 0 .2-.65l-1-1.73a.5.5 0 0 0-.64-.18l-.9.52a4.7 4.7 0 0 0-1.38-.8V3a.5.5 0 0 0-.5-.5H6.9a.5.5 0 0 0-.5.5v1.04a4.7 4.7 0 0 0-1.38.8l-.9-.52a.5.5 0 0 0-.64.18L2.48 6.23a.5.5 0 0 0 .18.65l.9.5a4.6 4.6 0 0 0 0 1.6l-.9.52a.5.5 0 0 0-.18.65l1 1.73a.5.5 0 0 0 .64.18l.9-.52c.42.31.88.57 1.38.8V13a.5.5 0 0 0 .5.5h2.2a.5.5 0 0 0 .5-.5v-1.04a4.7 4.7 0 0 0 1.38-.8l.9.52a.5.5 0 0 0 .64-.18l1-1.73a.5.5 0 0 0-.18-.65z"/></svg>
+            </button>
+            <button class="add-button" onclick="newCode()" id="btnNewCode"></button>
+        </div>
+
+        <div class="search">
+            <span class="search-ico">
+                <svg class="ico" width="13" height="13" viewBox="0 0 16 16"><circle cx="6.5" cy="6.5" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="10.5" y1="10.5" x2="14" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </span>
+            <input id="search" type="text" oninput="renderAll()" placeholder="Rechercher...">
+        </div>
+
+        <div class="list" id="codes"></div>
+
+        <div style="display:flex;gap:5px;padding:8px;border-top:1px solid var(--line)">
+            <button class="button" style="flex:1" onclick="goHome()" id="btnGoHome"></button>
+            <button class="button" style="flex:1" onclick="exportData()" id="btnExport"></button>
+            <button class="button" style="flex:1" onclick="document.getElementById('file').click()" id="btnImport"></button>
+            <input id="file" type="file" accept=".json" hidden onchange="importData(event)">
+        </div>
+    </aside>
+
+    <!-- GROUPS PANEL -->
+    <section class="groups-panel">
+        <div class="topbar">
+            <div class="brand code-title" id="currentCodeName"></div>
+            <button class="add-button" onclick="newGroup()" id="btnNewGroup"></button>
+        </div>
+        <div class="list" id="groups"></div>
+    </section>
+
+    <!-- EDITOR -->
+    <main>
+        <div id="empty" class="empty">
+            <div>
+                <strong id="emptyTitle"></strong>
+                <p id="emptyDesc"></p>
+            </div>
+        </div>
+
+        <div id="editorArea" style="display:none;flex-direction:column;flex:1;min-height:0">
+            <div class="editor-header">
+                <div class="breadcrumb" id="breadcrumb"></div>
+                <button class="button" onclick="newArticle()" id="btnEditorNewArticle"></button>
+                <button class="button primary" onclick="saveCurrent()" id="btnSave"></button>
+                <button class="button danger" onclick="deleteCurrentArticle()" id="btnDeleteArticle"></button>
+            </div>
+
+            <div class="editor-container">
+                <div class="meta">
+                    <input id="articleNumber" oninput="markDirty()" placeholder="Article 1">
+                    <input id="articleRef" oninput="markDirty()" placeholder="Référence / mot-clé">
+                </div>
+
+                <input id="articleTitle" class="title-input" oninput="markDirty()"
+                    onblur="setTitleOfArticle(currentArticle()&&currentArticle().id)"
+                    placeholder="Titre de l’article">
+
+                <div class="subtitle" id="articlePath"></div>
+
+                <div class="toolbar" id="toolbar">
+                    <select class="heading-select" id="headingSelect" onchange="applyHeading(this.value)"></select>
+
+                    <div class="toolbar-sep"></div>
+
+                    <!-- Bold -->
+                    <button class="tool" id="toolBold" onclick="cmd('bold')" title="">
+                        <svg class="ico" width="12" height="12" viewBox="0 0 16 16"><path d="M4 2h5a3.5 3.5 0 0 1 2.1 6.3A3.5 3.5 0 0 1 9 14H4V2zm2 2v3h3a1.5 1.5 0 0 0 0-3H6zm0 5v3h3a1.5 1.5 0 0 0 0-3H6z"/></svg>
+                        <span id="toolBoldLabel"></span>
+                    </button>
+                    <!-- Italic -->
+                    <button class="tool" id="toolItalic" onclick="cmd('italic')" title="">
+                        <svg class="ico" width="12" height="12" viewBox="0 0 16 16"><line x1="6" y1="2" x2="10" y2="2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="4" y1="14" x2="8" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="9" y1="2" x2="5" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        <span id="toolItalicLabel"></span>
+                    </button>
+                    <!-- Underline -->
+                    <button class="tool" id="toolUnderline" onclick="cmd('underline')" title="">
+                        <svg class="ico" width="12" height="12" viewBox="0 0 16 16"><path d="M4 2v6a4 4 0 0 0 8 0V2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="14" x2="14" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        <span id="toolUnderlineLabel"></span>
+                    </button>
+                    <!-- Strikethrough -->
+                    <button class="tool" id="toolStrike" onclick="cmd('strikeThrough')" title="">
+                        <svg class="ico" width="12" height="12" viewBox="0 0 16 16"><line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 8V5.5a3 3 0 0 1 6 0V8M5 8v2.5a3 3 0 0 0 6 0V8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                        <span id="toolStrikeLabel"></span>
+                    </button>
+
+                    <div class="toolbar-sep"></div>
+
+                    <!-- Unordered list -->
+                    <button class="tool" onclick="cmd('insertUnorderedList')" title="">
+                        <svg class="ico" width="13" height="13" viewBox="0 0 16 16"><circle cx="2.5" cy="4" r="1.2"/><circle cx="2.5" cy="8" r="1.2"/><circle cx="2.5" cy="12" r="1.2"/><line x1="5.5" y1="4" x2="14" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="5.5" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="5.5" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        <span id="toolUlLabel"></span>
+                    </button>
+                    <!-- Ordered list -->
+                    <button class="tool" onclick="cmd('insertOrderedList')" title="">
+                        <svg class="ico" width="13" height="13" viewBox="0 0 16 16"><text x="0" y="5.5" font-size="5" fill="currentColor">1.</text><text x="0" y="9.5" font-size="5" fill="currentColor">2.</text><text x="0" y="13.5" font-size="5" fill="currentColor">3.</text><line x1="5.5" y1="4" x2="14" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="5.5" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="5.5" y1="12" x2="14" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        <span id="toolOlLabel"></span>
+                    </button>
+                    <!-- Blockquote -->
+                    <button class="tool" onclick="cmd('formatBlock','blockquote')" title="">
+                        <svg class="ico" width="13" height="13" viewBox="0 0 16 16"><path d="M2 4h5v4H4a2 2 0 0 0 2 2v2H2V4zm8 0h5v4h-3a2 2 0 0 0 2 2v2h-4V4z" opacity=".8"/></svg>
+                        <span id="toolBqLabel"></span>
+                    </button>
+
+                    <div class="toolbar-sep"></div>
+
+                    <!-- HR -->
+                    <button class="tool" onclick="insertHR()" title="">
+                        <svg class="ico" width="13" height="13" viewBox="0 0 16 16"><line x1="1" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="4" x2="4" y2="4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".4"/><line x1="12" y1="4" x2="15" y2="4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".4"/><line x1="1" y1="12" x2="4" y2="12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".4"/><line x1="12" y1="12" x2="15" y2="12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".4"/></svg>
+                        <span id="toolHrLabel"></span>
+                    </button>
+                    <!-- Image -->
+                    <button class="tool" onclick="triggerImageInsert()" title="">
+                        <svg class="ico" width="13" height="13" viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="5.5" cy="6" r="1.5" fill="currentColor" opacity=".7"/><path d="M1 11l4-4 3 3 2-2 5 5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span id="toolImgLabel"></span>
+                    </button>
+                    <input id="imgFile" type="file" accept="image/*" hidden onchange="insertImageBase64(event)">
+                    <!-- Table -->
+                    <button class="tool" onclick="insertTable()" id="toolTable" title="">
+                        <svg class="ico" width="13" height="13" viewBox="0 0 16 16">
+                            <rect x="1.5" y="2" width="13" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.3"/>
+                            <line x1="1.5" y1="6" x2="14.5" y2="6" stroke="currentColor" stroke-width="1.2"/>
+                            <line x1="1.5" y1="10" x2="14.5" y2="10" stroke="currentColor" stroke-width="1.2"/>
+                            <line x1="6" y1="2" x2="6" y2="14" stroke="currentColor" stroke-width="1.2"/>
+                            <line x1="10" y1="2" x2="10" y2="14" stroke="currentColor" stroke-width="1.2"/>
+                        </svg>
+                        <span id="toolTableLabel"></span>
+                    </button>
+
+                    <div class="toolbar-sep"></div>
+
+                    <!-- Remove format -->
+                    <button class="tool" onclick="cmd('removeFormat')" title="">
+                        <svg class="ico" width="13" height="13" viewBox="0 0 16 16"><path d="M3 2h10l-4 5v7l-2-1V7z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><line x1="1" y1="14" x2="6" y2="9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                        <span id="toolClearLabel"></span>
+                    </button>
+                </div>
+
+                <div id="content" class="content" contenteditable="true" spellcheck="true"
+                    oninput="markDirty(); updateToolbarState();"
+                    onkeyup="updateToolbarState(); updateHeadingSelect();"
+                    onmouseup="updateToolbarState(); updateHeadingSelect();"
+                    onblur="saveCurrent(true)"></div>
+
+                <div class="status" id="status"></div>
+            </div>
+        </div>
+    </main>
+</div>
+</div>
+
+<!-- =====================================================
+     MODAL: Generic (codes, groups, articles)
+====================================================== -->
+<div class="modal-background" id="modal">
+    <div class="modal">
+        <h2 id="modalTitle"></h2>
+        <label id="modalNameLabel"></label>
+        <input id="modalName" type="text">
+        <label id="modalDescLabel"></label>
+        <textarea id="modalDesc"></textarea>
+        <div id="moveArea" style="display:none">
+            <label id="moveToLabel"></label>
+            <select id="moveTarget"></select>
+            <div class="move-info" id="moveInfo"></div>
+        </div>
+        <div class="modal-actions">
+            <button class="button" onclick="closeModal()" id="modalCancelBtn"></button>
+            <button class="button primary" id="modalConfirmButton" onclick="confirmModal()"></button>
+        </div>
+    </div>
+</div>
+
+<!-- =====================================================
+     MODAL: Settings
+====================================================== -->
+<div class="modal-background" id="settingsModal">
+    <div class="modal">
+        <h2>
+            <svg class="ico" width="15" height="15" viewBox="0 0 16 16"><path d="M8 10.5A2.5 2.5 0 1 1 8 5.5a2.5 2.5 0 0 1 0 5zm5.3-1.7-.9-.5a4.6 4.6 0 0 0 0-1.6l.9-.5a.5.5 0 0 0 .2-.65l-1-1.73a.5.5 0 0 0-.64-.18l-.9.52a4.7 4.7 0 0 0-1.38-.8V3a.5.5 0 0 0-.5-.5H6.9a.5.5 0 0 0-.5.5v1.04a4.7 4.7 0 0 0-1.38.8l-.9-.52a.5.5 0 0 0-.64.18L2.48 6.23a.5.5 0 0 0 .18.65l.9.5a4.6 4.6 0 0 0 0 1.6l-.9.52a.5.5 0 0 0-.18.65l1 1.73a.5.5 0 0 0 .64.18l.9-.52c.42.31.88.57 1.38.8V13a.5.5 0 0 0 .5.5h2.2a.5.5 0 0 0 .5-.5v-1.04a4.7 4.7 0 0 0 1.38-.8l.9.52a.5.5 0 0 0 .64-.18l1-1.73a.5.5 0 0 0-.18-.65z"/></svg>
+            <span id="settingsTitle"></span>
+        </h2>
+
+        <label id="settingsLangLabel"></label>
+        <div class="lang-options" id="langOptions">
+            <button class="lang-btn" data-lang="fr" onclick="setLang('fr')"><span class="flag flag-fr" aria-hidden="true"></span> — Français</button>
+            <button class="lang-btn" data-lang="en" onclick="setLang('en')"><span class="flag flag-gb" aria-hidden="true"></span> — English</button>
+            <button class="lang-btn" data-lang="de" onclick="setLang('de')"><span class="flag flag-de" aria-hidden="true"></span> — Deutsch</button>
+            <button class="lang-btn" data-lang="es" onclick="setLang('es')"><span class="flag flag-es" aria-hidden="true"></span> — Español</button>
+        </div>
+
+        <label id="settingsThemeLabel" style="margin-top:14px"></label>
+        <div class="settings-grid">
+            <div class="theme-option" data-combo="light-blue" onclick="setThemeCombo('light-blue')">
+                <div class="theme-swatch" style="background:#315efb"></div><span id="thL-blue"></span>
+            </div>
+            <div class="theme-option" data-combo="dark-blue" onclick="setThemeCombo('dark-blue')">
+                <div class="theme-swatch" style="background:#5e82fc"></div><span id="thD-blue"></span>
+            </div>
+            <div class="theme-option" data-combo="light-green" onclick="setThemeCombo('light-green')">
+                <div class="theme-swatch" style="background:#1a8c5b"></div><span id="thL-green"></span>
+            </div>
+            <div class="theme-option" data-combo="dark-green" onclick="setThemeCombo('dark-green')">
+                <div class="theme-swatch" style="background:#1a8c5b"></div><span id="thD-green"></span>
+            </div>
+            <div class="theme-option" data-combo="light-purple" onclick="setThemeCombo('light-purple')">
+                <div class="theme-swatch" style="background:#7c3aed"></div><span id="thL-purple"></span>
+            </div>
+            <div class="theme-option" data-combo="dark-purple" onclick="setThemeCombo('dark-purple')">
+                <div class="theme-swatch" style="background:#7c3aed"></div><span id="thD-purple"></span>
+            </div>
+            <div class="theme-option" data-combo="light-red" onclick="setThemeCombo('light-red')">
+                <div class="theme-swatch" style="background:#e11d1d"></div><span id="thL-red"></span>
+            </div>
+            <div class="theme-option" data-combo="dark-red" onclick="setThemeCombo('dark-red')">
+                <div class="theme-swatch" style="background:#e11d1d"></div><span id="thD-red"></span>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="button primary" onclick="closeSettings()" id="settingsCloseBtn"></button>
+        </div>
+    </div>
+</div>
+
+<!-- =====================================================
+     MODAL: Project (create / edit)
+====================================================== -->
+<div class="modal-background" id="projectModal">
+    <div class="modal">
+        <h2 id="projectModalTitle"></h2>
+        <label id="projectModalNameLabel"></label>
+        <input id="projectModalName" type="text">
+        <label id="projectModalDescLabel"></label>
+        <textarea id="projectModalDesc"></textarea>
+        <div class="modal-actions">
+            <button class="button" onclick="closeProjectModal()" id="projectModalCancel"></button>
+            <button class="button primary" id="projectModalConfirm" onclick="confirmProjectModal()"></button>
+        </div>
+    </div>
+</div>
+
+<div class="table-tools" id="tableTools" aria-label="Table">
+    <button class="small-button" onclick="addTableRow()" title="Ajouter une ligne">+L</button>
+    <button class="small-button" onclick="removeTableRow()" title="Supprimer une ligne">−L</button>
+    <button class="small-button" onclick="addTableColumn()" title="Ajouter une colonne">+C</button>
+    <button class="small-button" onclick="removeTableColumn()" title="Supprimer une colonne">−C</button>
+    <button class="small-button danger" onclick="removeSelectedTable()" title="Supprimer le tableau">×</button>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+/* =========================================================
+   I18N — full translations for every UI string
+========================================================= */
+const TR = {
+fr:{
+    heroDesc:"Choisissez un projet existant ou créez-en un nouveau.",
+    projects:"Projets",
+    newProject:"Nouveau projet",
+    noProjects:"Aucun projet — créez-en un pour commencer.",
+    editProject:"Modifier le projet",
+    projectName:"Nom du projet",
+    projectDesc:"Description",
+    descOptional:"Description optionnelle...",
+    projectCreated:"Projet créé",
+    projectEdited:"Projet modifié",
+    projectDeleted:"Projet supprimé",
+    deleteProject:(n)=>`Supprimer le projet "${n}" et toutes ses données ?`,
+    codeCount:(n)=>`${n} code(s)`,
+    articleCount:(n)=>`${n} article(s)`,
+    searchPh:"Rechercher...",
+    goHome:"← Projets",
+    export:"Exporter",
+    import:"Importer",
+    newCode:"+ Code",
+    newGroup:"+ Groupe",
+    selectCode:"Sélectionnez un code",
+    emptyTitle:"Éditeur juridique",
+    emptyDesc:"Sélectionnez un article ou créez un code pour commencer.",
+    newArticleBtn:"+ Article",
+    save:"Enregistrer",
+    delete:"Supprimer",
+    saved:"Enregistré",
+    unsaved:"Modifications non enregistrées",
+    articleNumPh:"Article 1",
+    articleRefPh:"Référence / mot-clé",
+    articleTitlePh:"Titre de l'article",
+    nameLabel:"Nom",
+    descLabel:"Description",
+    descPh:"Description optionnelle...",
+    cancel:"Annuler",
+    create:"Créer",
+    modify:"Enregistrer",
+    newCode_modal:"Nouveau code",
+    editCode_modal:"Modifier le code",
+    newGroup_modal:"Nouveau groupe",
+    editGroup_modal:"Modifier le groupe",
+    nameRequired:"Le nom est obligatoire",
+    needCode:"Créez d'abord un code",
+    needGroup:"Créez d'abord un groupe",
+    codeCreated:"Code créé",
+    codeEdited:"Code modifié",
+    codeDeleted:"Code supprimé",
+    groupCreated:"Groupe créé",
+    groupEdited:"Groupe modifié",
+    groupDeleted:"Groupe supprimé",
+    articleDeleted:"Article supprimé",
+    articleSaved:"Article enregistré",
+    articleMoved:"Article déplacé",
+    exportDone:"Export terminé",
+    importDone:"Import réussi",
+    invalidJson:"Fichier JSON invalide",
+    moveTitle:"Déplacer l'article",
+    moveTo:"Déplacer vers",
+    moveInfo:"L'article sera retiré de son groupe actuel et placé à la fin du groupe choisi.",
+    moveBtn:"Déplacer",
+    currentGroup:"Groupe actuel :",
+    untitled:"Sans titre",
+    up:"Haut",
+    down:"Bas",
+    addArticle:"+ Ajouter un article",
+    deleteConfirmCode:(n,g,a)=>`Supprimer le code "${n}" ?\n\n${g} groupe(s) et ${a} article(s) seront supprimés.`,
+    deleteConfirmGroup:(n,a)=>`Supprimer le groupe "${n}" et ses ${a} article(s) ?`,
+    deleteConfirmArticle:(n,t)=>`Supprimer "${n} - ${t}" ?`,
+    settingsTitle:"Paramètres",
+    settingsLang:"Langue",
+    settingsTheme:"Thème de couleur",
+    settingsClose:"Fermer",
+    siteLink:"Accueil du site",
+    settingsBtn:"Paramètres",
+    headingNormal:"Normal",
+    headingH1:"Titre 1", headingH2:"Titre 2", headingH3:"Titre 3",
+    headingH4:"Titre 4", headingH5:"Titre 5", headingH6:"Titre 6",
+    toolBold:"Gras", toolItalic:"Italique", toolUnderline:"Souligné", toolStrike:"Barré",
+    toolUl:"Liste", toolOl:"Liste num.", toolBq:"Citation",
+    toolHr:"Séparateur", toolImg:"Image", toolClear:"Nettoyer", toolTable:"Tableau",
+    thLight:"Clair", thDark:"Sombre",
+    thBlue:"Bleu", thGreen:"Vert", thPurple:"Violet", thRed:"Rouge",
+    projectLabelSub:"Projet",
+},
+en:{
+    heroDesc:"Choose an existing project or create a new one to start drafting.",
+    projects:"Projects",
+    newProject:"New project",
+    noProjects:"No projects yet — create one to get started.",
+    editProject:"Edit project",
+    projectName:"Project name",
+    projectDesc:"Description",
+    descOptional:"Optional description...",
+    projectCreated:"Project created",
+    projectEdited:"Project updated",
+    projectDeleted:"Project deleted",
+    deleteProject:(n)=>`Delete project "${n}" and all its data?`,
+    codeCount:(n)=>`${n} code(s)`,
+    articleCount:(n)=>`${n} article(s)`,
+    searchPh:"Search...",
+    goHome:"← Projects",
+    export:"Export",
+    import:"Import",
+    newCode:"+ Code",
+    newGroup:"+ Group",
+    selectCode:"Select a code",
+    emptyTitle:"Legal Editor",
+    emptyDesc:"Select an article or create a code to get started.",
+    newArticleBtn:"+ Article",
+    save:"Save",
+    delete:"Delete",
+    saved:"Saved",
+    unsaved:"Unsaved changes",
+    articleNumPh:"Article 1",
+    articleRefPh:"Reference / keyword",
+    articleTitlePh:"Article title",
+    nameLabel:"Name",
+    descLabel:"Description",
+    descPh:"Optional description...",
+    cancel:"Cancel",
+    create:"Create",
+    modify:"Save",
+    newCode_modal:"New code",
+    editCode_modal:"Edit code",
+    newGroup_modal:"New group",
+    editGroup_modal:"Edit group",
+    nameRequired:"Name is required",
+    needCode:"Create a code first",
+    needGroup:"Create a group first",
+    codeCreated:"Code created",
+    codeEdited:"Code updated",
+    codeDeleted:"Code deleted",
+    groupCreated:"Group created",
+    groupEdited:"Group updated",
+    groupDeleted:"Group deleted",
+    articleDeleted:"Article deleted",
+    articleSaved:"Article saved",
+    articleMoved:"Article moved",
+    exportDone:"Export complete",
+    importDone:"Import successful",
+    invalidJson:"Invalid JSON file",
+    moveTitle:"Move article",
+    moveTo:"Move to",
+    moveInfo:"The article will be removed from its current group and placed at the end of the selected group.",
+    moveBtn:"Move",
+    currentGroup:"Current group:",
+    untitled:"Untitled",
+    up:"Up",
+    down:"Down",
+    addArticle:"+ Add article",
+    deleteConfirmCode:(n,g,a)=>`Delete code "${n}"?\n\n${g} group(s) and ${a} article(s) will be removed.`,
+    deleteConfirmGroup:(n,a)=>`Delete group "${n}" and its ${a} article(s)?`,
+    deleteConfirmArticle:(n,t)=>`Delete "${n} - ${t}"?`,
+    settingsTitle:"Settings",
+    settingsLang:"Language",
+    settingsTheme:"Color theme",
+    settingsClose:"Close",
+    siteLink:"Site home",
+    settingsBtn:"Settings",
+    headingNormal:"Normal",
+    headingH1:"Heading 1", headingH2:"Heading 2", headingH3:"Heading 3",
+    headingH4:"Heading 4", headingH5:"Heading 5", headingH6:"Heading 6",
+    toolBold:"Bold", toolItalic:"Italic", toolUnderline:"Underline", toolStrike:"Strikethrough",
+    toolUl:"List", toolOl:"Numbered list", toolBq:"Quote",
+    toolHr:"Divider", toolImg:"Image", toolClear:"Clear format", toolTable:"Table",
+    thLight:"Light", thDark:"Dark",
+    thBlue:"Blue", thGreen:"Green", thPurple:"Purple", thRed:"Red",
+    projectLabelSub:"Project",
+},
+de:{
+    heroDesc:"Wählen Sie ein bestehendes Projekt oder erstellen Sie ein neues.",
+    projects:"Projekte",
+    newProject:"Neues Projekt",
+    noProjects:"Keine Projekte — erstellen Sie eines, um zu beginnen.",
+    editProject:"Projekt bearbeiten",
+    projectName:"Projektname",
+    projectDesc:"Beschreibung",
+    descOptional:"Optionale Beschreibung...",
+    projectCreated:"Projekt erstellt",
+    projectEdited:"Projekt aktualisiert",
+    projectDeleted:"Projekt gelöscht",
+    deleteProject:(n)=>`Projekt "${n}" und alle Daten löschen?`,
+    codeCount:(n)=>`${n} Code(s)`,
+    articleCount:(n)=>`${n} Artikel`,
+    searchPh:"Suchen...",
+    goHome:"← Projekte",
+    export:"Exportieren",
+    import:"Importieren",
+    newCode:"+ Code",
+    newGroup:"+ Gruppe",
+    selectCode:"Code auswählen",
+    emptyTitle:"Rechtlicher Editor",
+    emptyDesc:"Wählen Sie einen Artikel oder erstellen Sie einen Code.",
+    newArticleBtn:"+ Artikel",
+    save:"Speichern",
+    delete:"Löschen",
+    saved:"Gespeichert",
+    unsaved:"Ungespeicherte Änderungen",
+    articleNumPh:"Artikel 1",
+    articleRefPh:"Referenz / Stichwort",
+    articleTitlePh:"Artikeltitel",
+    nameLabel:"Name",
+    descLabel:"Beschreibung",
+    descPh:"Optionale Beschreibung...",
+    cancel:"Abbrechen",
+    create:"Erstellen",
+    modify:"Speichern",
+    newCode_modal:"Neuer Code",
+    editCode_modal:"Code bearbeiten",
+    newGroup_modal:"Neue Gruppe",
+    editGroup_modal:"Gruppe bearbeiten",
+    nameRequired:"Name ist erforderlich",
+    needCode:"Erstellen Sie zuerst einen Code",
+    needGroup:"Erstellen Sie zuerst eine Gruppe",
+    codeCreated:"Code erstellt",
+    codeEdited:"Code aktualisiert",
+    codeDeleted:"Code gelöscht",
+    groupCreated:"Gruppe erstellt",
+    groupEdited:"Gruppe aktualisiert",
+    groupDeleted:"Gruppe gelöscht",
+    articleDeleted:"Artikel gelöscht",
+    articleSaved:"Artikel gespeichert",
+    articleMoved:"Artikel verschoben",
+    exportDone:"Export abgeschlossen",
+    importDone:"Import erfolgreich",
+    invalidJson:"Ungültige JSON-Datei",
+    moveTitle:"Artikel verschieben",
+    moveTo:"Verschieben nach",
+    moveInfo:"Der Artikel wird aus seiner aktuellen Gruppe entfernt und ans Ende der gewählten Gruppe platziert.",
+    moveBtn:"Verschieben",
+    currentGroup:"Aktuelle Gruppe:",
+    untitled:"Ohne Titel",
+    up:"Hoch",
+    down:"Runter",
+    addArticle:"+ Artikel hinzufügen",
+    deleteConfirmCode:(n,g,a)=>`Code "${n}" löschen?\n\n${g} Gruppe(n) und ${a} Artikel werden gelöscht.`,
+    deleteConfirmGroup:(n,a)=>`Gruppe "${n}" und ${a} Artikel löschen?`,
+    deleteConfirmArticle:(n,tt)=>`"${n} - ${tt}" löschen?`,
+    settingsTitle:"Einstellungen",
+    settingsLang:"Sprache",
+    settingsTheme:"Farbthema",
+    settingsClose:"Schließen",
+    siteLink:"Website-Startseite",
+    settingsBtn:"Einstellungen",
+    headingNormal:"Normal",
+    headingH1:"Überschrift 1", headingH2:"Überschrift 2", headingH3:"Überschrift 3",
+    headingH4:"Überschrift 4", headingH5:"Überschrift 5", headingH6:"Überschrift 6",
+    toolBold:"Fett", toolItalic:"Kursiv", toolUnderline:"Unterstrichen", toolStrike:"Durchgestrichen",
+    toolUl:"Liste", toolOl:"Numm. Liste", toolBq:"Zitat",
+    toolHr:"Trennlinie", toolImg:"Bild", toolClear:"Format entfernen",
+    thLight:"Hell", thDark:"Dunkel",
+    thBlue:"Blau", thGreen:"Grün", thPurple:"Lila", thRed:"Rot",
+    projectLabelSub:"Projekt",
+},
+es:{
+    heroDesc:"Elige un proyecto existente o crea uno nuevo para empezar a redactar.",
+    projects:"Proyectos",
+    newProject:"Nuevo proyecto",
+    noProjects:"Sin proyectos — crea uno para empezar.",
+    editProject:"Editar proyecto",
+    projectName:"Nombre del proyecto",
+    projectDesc:"Descripción",
+    descOptional:"Descripción opcional...",
+    projectCreated:"Proyecto creado",
+    projectEdited:"Proyecto actualizado",
+    projectDeleted:"Proyecto eliminado",
+    deleteProject:(n)=>`¿Eliminar el proyecto "${n}" y todos sus datos?`,
+    codeCount:(n)=>`${n} código(s)`,
+    articleCount:(n)=>`${n} artículo(s)`,
+    searchPh:"Buscar...",
+    goHome:"← Proyectos",
+    export:"Exportar",
+    import:"Importar",
+    newCode:"+ Código",
+    newGroup:"+ Grupo",
+    selectCode:"Seleccionar un código",
+    emptyTitle:"Editor jurídico",
+    emptyDesc:"Selecciona un artículo o crea un código para empezar.",
+    newArticleBtn:"+ Artículo",
+    save:"Guardar",
+    delete:"Eliminar",
+    saved:"Guardado",
+    unsaved:"Cambios sin guardar",
+    articleNumPh:"Artículo 1",
+    articleRefPh:"Referencia / palabra clave",
+    articleTitlePh:"Título del artículo",
+    nameLabel:"Nombre",
+    descLabel:"Descripción",
+    descPh:"Descripción opcional...",
+    cancel:"Cancelar",
+    create:"Crear",
+    modify:"Guardar",
+    newCode_modal:"Nuevo código",
+    editCode_modal:"Editar código",
+    newGroup_modal:"Nuevo grupo",
+    editGroup_modal:"Editar grupo",
+    nameRequired:"El nombre es obligatorio",
+    needCode:"Crea primero un código",
+    needGroup:"Crea primero un grupo",
+    codeCreated:"Código creado",
+    codeEdited:"Código modificado",
+    codeDeleted:"Código eliminado",
+    groupCreated:"Grupo creado",
+    groupEdited:"Grupo modificado",
+    groupDeleted:"Grupo eliminado",
+    articleDeleted:"Artículo eliminado",
+    articleSaved:"Artículo guardado",
+    articleMoved:"Artículo movido",
+    exportDone:"Exportación completada",
+    importDone:"Importación exitosa",
+    invalidJson:"Archivo JSON inválido",
+    moveTitle:"Mover artículo",
+    moveTo:"Mover a",
+    moveInfo:"El artículo se retirará de su grupo actual y se colocará al final del grupo seleccionado.",
+    moveBtn:"Mover",
+    currentGroup:"Grupo actual:",
+    untitled:"Sin título",
+    up:"Subir",
+    down:"Bajar",
+    addArticle:"+ Añadir artículo",
+    deleteConfirmCode:(n,g,a)=>`¿Eliminar el código "${n}"?\n\n${g} grupo(s) y ${a} artículo(s) serán eliminados.`,
+    deleteConfirmGroup:(n,a)=>`¿Eliminar el grupo "${n}" y sus ${a} artículo(s)?`,
+    deleteConfirmArticle:(n,tt)=>`¿Eliminar "${n} - ${tt}"?`,
+    settingsTitle:"Configuración",
+    settingsLang:"Idioma",
+    settingsTheme:"Tema de color",
+    settingsClose:"Cerrar",
+    siteLink:"Inicio del sitio",
+    settingsBtn:"Configuración",
+    headingNormal:"Normal",
+    headingH1:"Encabezado 1", headingH2:"Encabezado 2", headingH3:"Encabezado 3",
+    headingH4:"Encabezado 4", headingH5:"Encabezado 5", headingH6:"Encabezado 6",
+    toolBold:"Negrita", toolItalic:"Cursiva", toolUnderline:"Subrayado", toolStrike:"Tachado",
+    toolUl:"Lista", toolOl:"Lista num.", toolBq:"Cita",
+    toolHr:"Separador", toolImg:"Imagen", toolClear:"Limpiar formato", toolTable:"Tabla",
+    thLight:"Claro", thDark:"Oscuro",
+    thBlue:"Azul", thGreen:"Verde", thPurple:"Morado", thRed:"Rojo",
+    projectLabelSub:"Proyecto",
+}
+};
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+const SETTINGS_KEY = "lawsarchitect_settings_v1";
+let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY)||"null") || { lang:"fr", themeCombo:"light-blue" };
+function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+
+function t(key,...args){
+    const tr = TR[settings.lang] || TR.fr;
+    const val = tr[key] !== undefined ? tr[key] : (TR.fr[key] || key);
+    return typeof val==="function" ? val(...args) : val;
+}
+
+/* ===========================
+   THEME
+=========================== */
+const ACCENT_COLORS = {
+    blue:  { l:"#315efb", d:"#5e82fc", al:"#eaf0ff", ad:"#1e2d55", ak:"#1a3fd4" },
+    green: { l:"#1a8c5b", d:"#2db87a", al:"#d5f0e4", ad:"#163d28", ak:"#137048" },
+    purple:{ l:"#7c3aed", d:"#9d6bff", al:"#ede9fe", ad:"#2d1d55", ak:"#6428d4" },
+    red:  { l:"#e11d1d", d:"#f25050", al:"#ffe4e4", ad:"#3d0d0d", ak:"#be1212" }
+};
+
+function applyTheme(){
+    const combo = settings.themeCombo || "light-blue";
+    const [mode, colorKey] = combo.split("-");
+    const isDark = mode === "dark";
+    const color = ACCENT_COLORS[colorKey] || ACCENT_COLORS.blue;
+    const root = document.documentElement;
+    root.setAttribute("data-theme", isDark ? "dark" : "");
+    root.style.setProperty("--accent", isDark ? color.d : color.l);
+    root.style.setProperty("--accent-light", isDark ? color.ad : color.al);
+    root.style.setProperty("--accent-dark", color.ak);
+    root.style.setProperty("--toolbar-active", isDark ? color.d : color.l);
+    root.style.setProperty("--toolbar-active-bg", isDark ? color.ad : color.al);
+    // Update selected state in UI
+    document.querySelectorAll(".theme-option").forEach(el=>{
+        el.classList.toggle("selected", el.dataset.combo === combo);
+    });
+}
+
+function setThemeCombo(combo){
+    settings.themeCombo = combo;
+    saveSettings();
+    applyTheme();
+}
+
+/* ===========================
+   LANG APPLICATION
+=========================== */
+function applyAllTranslations(){
+    // Hero
+    setText("heroDesc", t("heroDesc"));
+    setText("projectsSectionTitle", t("projects"));
+    setButtonText("btnNewProject", t("newProject"));
+    setText("newProjectDashedButton", t("newProject"))
+    // Sidebar
+    const code = currentCode();
+    setText("currentCodeName", code ? code.name : t("selectCode"));
+    setButtonText("btnNewCode", t("newCode"));
+    setButtonText("btnGoHome", t("goHome"));
+    setButtonText("btnExport", t("export"));
+    setButtonText("btnImport", t("import"));
+    setButtonText("btnNewGroup", t("newGroup"));
+    setAttr("search", "placeholder", t("searchPh"));
+    // Editor header
+    setButtonText("btnEditorNewArticle", t("newArticleBtn"));
+    setButtonText("btnSave", t("save"));
+    setButtonText("btnDeleteArticle", t("delete"));
+    // Editor fields
+    setAttr("articleNumber", "placeholder", t("articleNumPh"));
+    setAttr("articleRef", "placeholder", t("articleRefPh"));
+    setAttr("articleTitle", "placeholder", t("articleTitlePh"));
+    // Empty state
+    setText("emptyTitle", t("emptyTitle"));
+    setText("emptyDesc", t("emptyDesc"));
+    // Status
+    const statusEl = document.getElementById("status");
+    if(statusEl && statusEl.textContent) statusEl.textContent = state.dirty ? t("unsaved") : t("saved");
+    // Toolbar labels
+    setText("toolBoldLabel", t("toolBold"));
+    setText("toolItalicLabel", t("toolItalic"));
+    setText("toolUnderlineLabel", t("toolUnderline"));
+    setText("toolStrikeLabel", t("toolStrike"));
+    setText("toolUlLabel", t("toolUl"));
+    setText("toolOlLabel", t("toolOl"));
+    setText("toolBqLabel", t("toolBq"));
+    setText("toolHrLabel", t("toolHr"));
+    setText("toolImgLabel", t("toolImg"));
+    setText("toolClearLabel", t("toolClear"));
+     setText("toolTableLabel", t("toolTable"));
+    // Toolbar titles
+    setTitle("toolBold", t("toolBold"));
+    setTitle("toolItalic", t("toolItalic"));
+    setTitle("toolUnderline", t("toolUnderline"));
+    setTitle("toolStrike", t("toolStrike"));
+     setTitle("toolTable", t("toolTable"));
+    setTitle("settingsBtnHome", t("settingsBtn"));
+    setTitle("settingsBtnApp", t("settingsBtn"));
+    setTitle("siteLinkHome", t("siteLink"));
+    setTitle("siteLinkApp", t("siteLink"));
+    // Heading select
+    buildHeadingSelect();
+    // Settings modal
+    setText("settingsTitle", t("settingsTitle"));
+    setText("settingsLangLabel", t("settingsLang"));
+    setText("settingsThemeLabel", t("settingsTheme"));
+    setButtonText("settingsCloseBtn", t("settingsClose"));
+    // Theme labels
+    const themeLabels = {
+        "thL-blue": `${t("thLight")} · ${t("thBlue")}`,
+        "thD-blue": `${t("thDark")} · ${t("thBlue")}`,
+        "thL-green": `${t("thLight")} · ${t("thGreen")}`,
+        "thD-green": `${t("thDark")} · ${t("thGreen")}`,
+        "thL-purple": `${t("thLight")} · ${t("thPurple")}`,
+        "thD-purple": `${t("thDark")} · ${t("thPurple")}`,
+        "thL-red": `${t("thLight")} · ${t("thRed")}`,
+        "thD-red": `${t("thDark")} · ${t("thRed")}`,
+    };
+    Object.entries(themeLabels).forEach(([id,label])=>setText(id,label));
+    // Lang buttons selected state
+    document.querySelectorAll(".lang-btn").forEach(btn=>{
+        btn.classList.toggle("selected", btn.dataset.lang === settings.lang);
+    });
+    // Modal static labels
+    setText("modalDescLabel", t("descLabel"));
+    setText("modalNameLabel", t("nameLabel"));
+    setText("moveToLabel", t("moveTo"));
+    setText("moveInfo", t("moveInfo"));
+    // Project modal
+    setText("projectModalNameLabel", t("projectName"));
+    setText("projectModalDescLabel", t("projectDesc"));
+    setAttr("projectModalDesc", "placeholder", t("descPh"));
+}
+
+function buildHeadingSelect(){
+    const sel = document.getElementById("headingSelect");
+    if(!sel) return;
+    const cur = sel.value || "div";
+    sel.innerHTML = [
+        ["div", t("headingNormal")],
+        ["h1", t("headingH1")], ["h2", t("headingH2")], ["h3", t("headingH3")],
+        ["h4", t("headingH4")], ["h5", t("headingH5")], ["h6", t("headingH6")]
+    ].map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+    sel.value = cur;
+}
+
+function setText(id, txt){ const el=document.getElementById(id); if(el) el.textContent=txt; }
+function setButtonText(id, txt){ const el=document.getElementById(id); if(el) el.textContent=txt; }
+function setAttr(id, attr, val){ const el=document.getElementById(id); if(el) el.setAttribute(attr, val); }
+function setTitle(id, val){ const el=document.getElementById(id); if(el) el.setAttribute("title", val); }
+
+function setLang(lang){
+    settings.lang = lang;
+    saveSettings();
+    applyAllTranslations();
+    renderAll();
+    renderProjects();
+}
+
+/* =========================================================
+   MULTI-PROJECT STORAGE
+========================================================= */
+const PROJECTS_INDEX_KEY = "lawsarchitect_projects_v1";
+function loadProjectsIndex(){ return JSON.parse(localStorage.getItem(PROJECTS_INDEX_KEY)||"[]"); }
+function saveProjectsIndex(idx){ localStorage.setItem(PROJECTS_INDEX_KEY, JSON.stringify(idx)); }
+function getProjectKey(id){ return "lawsarchitect_project_"+id; }
+function loadProjectData(id){ return JSON.parse(localStorage.getItem(getProjectKey(id))||"null") || { codes:[] }; }
+function saveProjectData(id, data){ localStorage.setItem(getProjectKey(id), JSON.stringify(data)); }
+function deleteProjectData(id){ localStorage.removeItem(getProjectKey(id)); }
+
+// Migrate old qualad_laws_v1
+(function migrate(){
+    const old = localStorage.getItem("qualad_laws_v1");
+    if(!old) return;
+    const index = loadProjectsIndex();
+    if(index.length>0) return;
+    try{
+        const data = JSON.parse(old);
+        if(data && Array.isArray(data.codes)){
+            const id = uid();
+            saveProjectsIndex([{ id, name:"Mon projet", description:"Importé", created:Date.now() }]);
+            saveProjectData(id, data);
+            localStorage.removeItem("qualad_laws_v1");
+        }
+    }catch(e){}
+})();
+
+/* =========================================================
+   STATE
+========================================================= */
+let currentProjectId = null;
+let db = { codes:[] };
+let state = {
+    codeId:null, groupId:null, articleId:null, dirty:false,
+    modalType:null, editingCodeId:null, editingGroupId:null,
+    editingArticleId:null, editingProjectId:null
+};
+
+/* =========================================================
+   UTILS
+========================================================= */
+function uid(){ return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+function saveDB(){ if(currentProjectId) saveProjectData(currentProjectId, db); }
+function currentCode(){ return db.codes.find(c=>c.id===state.codeId); }
+function currentGroup(){ const c=currentCode(); return c ? c.groups.find(g=>g.id===state.groupId) : null; }
+function currentArticle(){ const g=currentGroup(); return g ? g.articles.find(a=>a.id===state.articleId) : null; }
+function escapeHTML(v){ return String(v||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
+
+/* =========================================================
+   HOME / APP SCREENS
+========================================================= */
+function showHomeScreen(){
+    document.getElementById("homeScreen").style.display="flex";
+    document.getElementById("appScreen").style.display="none";
+    renderProjects();
+    applyAllTranslations();
+}
+function showAppScreen(){
+    document.getElementById("homeScreen").style.display="none";
+    document.getElementById("appScreen").style.display="block";
+}
+
+/* =========================================================
+   PROJECTS
+========================================================= */
+function renderProjects(){
+    const index = loadProjectsIndex();
+    const grid = document.getElementById("projectsGrid");
+    let html = "";
+
+    if(index.length===0){
+        html += `<div class="projects-empty">${t("noProjects")}</div>`;
+    } else {
+        html += index.map(proj=>{
+            const data = loadProjectData(proj.id);
+            const articleCount = data.codes.reduce((s,c)=>s+c.groups.reduce((s2,g)=>s2+g.articles.length,0),0);
+            const codeCount = data.codes.length;
+            // SVG book icon
+            const bookSvg = `<svg class="ico" width="20" height="20" viewBox="0 0 20 20"><path d="M4 3h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.4"/><line x1="7" y1="3" x2="7" y2="17" stroke="currentColor" stroke-width="1.4"/></svg>`;
+            const editSvg = `<svg class="ico" width="11" height="11" viewBox="0 0 16 16"><path d="M11.5 2.5l2 2L5 13H3v-2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+            const delSvg = `<svg class="ico" width="11" height="11" viewBox="0 0 16 16"><line x1="3" y1="3" x2="13" y2="13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="13" y1="3" x2="3" y2="13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+            return `
+            <div class="project-card" onclick="openProject('${proj.id}')">
+                <span class="card-icon">${bookSvg}</span>
+                <div class="card-name">${escapeHTML(proj.name)}</div>
+                <div class="card-desc">${escapeHTML(proj.description||"")}</div>
+                <div class="card-meta">${t("codeCount",codeCount)} &middot; ${t("articleCount",articleCount)}</div>
+                <div class="card-menu">
+                    <button class="small-button" onclick="event.stopPropagation();editProject('${proj.id}')" title="${t("editProject")}">${editSvg}</button>
+                    <button class="small-button danger" onclick="event.stopPropagation();deleteProject('${proj.id}')">${delSvg}</button>
+                </div>
+            </div>`;
+        }).join("");
+    }
+
+    html += `<div class="new-project-card" onclick="createNewProject()">
+        <svg class="ico" width="24" height="24" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span id="newProjectDashedButton">${t("newProject")}</span>
+    </div>`;
+    grid.innerHTML = html;
+}
+
+
+function openProject(id){
+    saveCurrent(true);
+    currentProjectId = id;
+    db = loadProjectData(id);
+    const index = loadProjectsIndex();
+    const proj = index.find(p=>p.id===id);
+    if(proj){ const el=document.getElementById("projectNameLabel"); if(el) el.textContent=proj.name.slice(0,20); el.title = proj.name }
+    state.codeId = db.codes[0]?.id||null;
+    state.groupId = db.codes[0]?.groups[0]?.id||null;
+    state.articleId = db.codes[0]?.groups[0]?.articles[0]?.id||null;
+    state.dirty = false;
+    showAppScreen();
+    renderAll();
+}
+
+function goHome(){
+    saveCurrent(true);
+    state.dirty = false;
+    showHomeScreen();
+}
+
+function createNewProject(){
+    state.editingProjectId = null;
+    setText("projectModalTitle", t("newProject"));
+    setText("projectModalNameLabel", t("projectName"));
+    setText("projectModalDescLabel", t("projectDesc"));
+    document.getElementById("projectModalName").value = "";
+    document.getElementById("projectModalName").placeholder = t("nameLabel");
+    document.getElementById("projectModalDesc").value = "";
+    document.getElementById("projectModalDesc").placeholder = t("descPh");
+    setText("projectModalConfirm", t("create"));
+    setText("projectModalCancel", t("cancel"));
+    document.getElementById("projectModal").classList.add("visible");
+    setTimeout(()=>document.getElementById("projectModalName").focus(),50);
+}
+
+function editProject(id){
+    const index = loadProjectsIndex();
+    const proj = index.find(p=>p.id===id);
+    if(!proj) return;
+    state.editingProjectId = id;
+    setText("projectModalTitle", t("editProject"));
+    setText("projectModalNameLabel", t("projectName"));
+    setText("projectModalDescLabel", t("projectDesc"));
+    document.getElementById("projectModalName").value = proj.name;
+    document.getElementById("projectModalDesc").value = proj.description||"";
+    document.getElementById("projectModalDesc").placeholder = t("descPh");
+    setText("projectModalConfirm", t("modify"));
+    setText("projectModalCancel", t("cancel"));
+    document.getElementById("projectModal").classList.add("visible");
+    setTimeout(()=>document.getElementById("projectModalName").focus(),50);
+}
+
+function closeProjectModal(){
+    document.getElementById("projectModal").classList.remove("visible");
+    state.editingProjectId = null;
+}
+
+function confirmProjectModal(){
+    const name = document.getElementById("projectModalName").value.trim();
+    if(!name){ toast(t("nameRequired")); return; }
+    const desc = document.getElementById("projectModalDesc").value.trim();
+    const index = loadProjectsIndex();
+    if(state.editingProjectId){
+        const proj = index.find(p=>p.id===state.editingProjectId);
+        if(proj){ proj.name=name; proj.description=desc; }
+        saveProjectsIndex(index);
+        closeProjectModal();
+        renderProjects();
+        if(currentProjectId===state.editingProjectId){
+            const el=document.getElementById("projectNameLabel"); if(el) el.textContent=name.slice(0,20); el.title = name;
+        }
+        toast(t("projectEdited"));
+    } else {
+        const id = uid();
+        index.push({ id, name, description:desc, created:Date.now() });
+        saveProjectsIndex(index);
+        saveProjectData(id, { codes:[] });
+        closeProjectModal();
+        openProject(id);
+        toast(t("projectCreated"));
+    }
+}
+
+function deleteProject(id){
+    const index = loadProjectsIndex();
+    const proj = index.find(p=>p.id===id);
+    if(!proj) return;
+    if(!confirm(t("deleteProject",proj.name))) return;
+    saveProjectsIndex(index.filter(p=>p.id!==id));
+    deleteProjectData(id);
+    renderProjects();
+    toast(t("projectDeleted"));
+}
+
+/* =========================================================
+   RENDER ALL
+========================================================= */
+function renderAll(){
+    renderCodes();
+    renderGroups();
+    loadEditor();
+    applyAllTranslations();
+}
+
+/* =========================================================
+   CODES
+========================================================= */
+function renderCodes(){
+    const el = document.getElementById("codes");
+    const search = (document.getElementById("search")?.value||"").toLowerCase();
+    const codeSvg = `<svg class="ico" width="13" height="13" viewBox="0 0 16 16"><rect x="2" y="1" width="9" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><line x1="5" y1="5" x2="9" y2="5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="5" y1="8" x2="9" y2="8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="5" y1="11" x2="8" y2="11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><rect x="10" y="8" width="4" height="6" rx="1" fill="currentColor" opacity=".5"/></svg>`;
+    el.innerHTML = db.codes
+        .filter(c=>(c.name+" "+(c.description||"")).toLowerCase().includes(search))
+        .map((code,i)=>{
+            const n = code.groups.reduce((s,g)=>s+g.articles.length,0);
+            return `
+            <div class="item ${code.id===state.codeId?"active":""}">
+                <div class="item-symbol" onclick="selectCode('${code.id}')">${codeSvg}</div>
+                <div class="grow" title="${escapeHTML(code.name)}" onclick="selectCode('${code.id}')">${escapeHTML(code.name)}</div>
+                <span class="count">${n}</span>
+                <div class="item-actions">
+                    <button class="small-button" onclick="moveCode('${code.id}',-1)" ${i===0?"disabled":""}>${svgArrow("up")}</button>
+                    <button class="small-button" onclick="moveCode('${code.id}',1)" ${i===db.codes.length-1?"disabled":""}>${svgArrow("down")}</button>
+                    <button class="small-button" onclick="editCode('${code.id}')">${svgEdit()}</button>
+                    <button class="small-button danger" onclick="deleteCode('${code.id}')">${svgX()}</button>
+                </div>
+            </div>`;
+        }).join("");
+}
+
+/* =========================================================
+   GROUPS
+========================================================= */
+function renderGroups(){
+    const el = document.getElementById("groups");
+    const code = currentCode();
+    const codeNameEl = document.getElementById("currentCodeName");
+    if(codeNameEl) codeNameEl.textContent = code ? code.name : t("selectCode");
+    if(!code){ el.innerHTML=""; return; }
+    const search = (document.getElementById("search")?.value||"").toLowerCase();
+    el.innerHTML = code.groups.map((group,gi)=>{
+        const arts = group.articles.filter(a=>
+            (a.title+" "+a.number+" "+(a.ref||"")+" "+(a.html||"")).toLowerCase().includes(search));
+        return `
+        <div class="group">
+            <div class="group-header">
+                <div class="group-name" title="${escapeHTML(group.name)}">${escapeHTML(group.name)}</div>
+                <div class="group-actions">
+                    <button class="small-button" onclick="moveGroup('${group.id}',-1)" ${gi===0?"disabled":""}>${svgArrow("up")}</button>
+                    <button class="small-button" onclick="moveGroup('${group.id}',1)" ${gi===code.groups.length-1?"disabled":""}>${svgArrow("down")}</button>
+                    <button class="small-button" onclick="editGroup('${group.id}')">${svgEdit()}</button>
+                    <button class="small-button danger" onclick="deleteGroup('${group.id}')">${svgX()}</button>
+                </div>
+            </div>
+            ${group.description?`<div class="group-description">${escapeHTML(group.description)}</div>`:""}
+            ${arts.map(article=>{
+                const oi = group.articles.findIndex(a=>a.id===article.id);
+                return `
+                <div class="article ${article.id===state.articleId?"active":""}">
+                    <div class="article-main" onclick="selectArticle('${group.id}','${article.id}')">
+                        <span class="article-number">${escapeHTML(article.number)}</span>
+                        <span class="article-title" title="${escapeHTML(article.title||t("untitled"))}">${escapeHTML(article.title||t("untitled"))}</span>
+                    </div>
+                    <div class="article-actions">
+                        <button class="small-button" onclick="moveArticle('${group.id}','${article.id}',-1)" ${oi===0?"disabled":""}>${svgArrow("up")}</button>
+                        <button class="small-button" onclick="moveArticle('${group.id}','${article.id}',1)" ${oi===group.articles.length-1?"disabled":""}>${svgArrow("down")}</button>
+                        <button class="small-button" onclick="editArticle('${group.id}','${article.id}')">${svgEdit()}</button>
+                        <button class="small-button" onclick="moveArticleToGroup('${group.id}','${article.id}')">${svgMove()}</button>
+                        <button class="small-button danger" onclick="deleteArticle('${group.id}','${article.id}')">${svgX()}</button>
+                    </div>
+                </div>`;
+            }).join("")}
+            <button class="add-article-button" onclick="newArticle('${group.id}')">
+                <svg class="ico" width="11" height="11" viewBox="0 0 12 12"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                ${t("addArticle").replace("+ ","")}
+            </button>
+        </div>`;
+    }).join("");
+}
+
+/* tiny SVG helpers */
+function svgArrow(dir){
+    return `<svg class="ico" width="10" height="10" viewBox="0 0 12 12"><polyline points="${dir==="up"?"2,9 6,3 10,9":"2,3 6,9 10,3"}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+function svgEdit(){ return `<svg class="ico" width="10" height="10" viewBox="0 0 14 14"><path d="M9.5 1.5l3 3L4 13H1v-3z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>`; }
+function svgX(){ return `<svg class="ico" width="9" height="9" viewBox="0 0 10 10"><line x1="1" y1="1" x2="9" y2="9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="9" y1="1" x2="1" y2="9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`; }
+function svgMove(){ return `<svg class="ico" width="10" height="10" viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><polyline points="3,4 6,1 9,4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><polyline points="3,8 6,11 9,8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`; }
+
+/* =========================================================
+   SELECT
+========================================================= */
+function selectCode(id){
+    saveCurrent(true);
+    state.codeId = id;
+    const code = currentCode();
+    state.groupId = code?.groups[0]?.id||null;
+    state.articleId = code?.groups[0]?.articles[0]?.id||null;
+    state.dirty = false;
+    renderAll();
+}
+
+function selectArticle(groupId, articleId){
+    saveCurrent(true);
+    state.groupId = groupId;
+    state.articleId = articleId;
+    state.dirty = false;
+    renderAll();
+}
+
+/* =========================================================
+   CODE CRUD
+========================================================= */
+function newCode(){
+    openModal("code-create", t("newCode_modal"));
+}
+function editCode(id){
+    const code = db.codes.find(c=>c.id===id); if(!code) return;
+    state.editingCodeId = id;
+    openModal("code-edit", t("editCode_modal"));
+    document.getElementById("modalName").value = code.name;
+    document.getElementById("modalDesc").value = code.description||"";
+    setText("modalConfirmButton", t("modify"));
+}
+function deleteCode(id){
+    const code = db.codes.find(c=>c.id===id); if(!code) return;
+    const g=code.groups.length, a=code.groups.reduce((s,gr)=>s+gr.articles.length,0);
+    if(!confirm(t("deleteConfirmCode",code.name,g,a))) return;
+    const idx = db.codes.findIndex(c=>c.id===id);
+    db.codes.splice(idx,1);
+    const next = db.codes[idx]||db.codes[idx-1]||db.codes[0];
+    state.codeId=next?.id||null; state.groupId=next?.groups[0]?.id||null; state.articleId=next?.groups[0]?.articles[0]?.id||null;
+    saveDB(); renderAll(); toast(t("codeDeleted"));
+}
+function moveCode(id, dir){
+    const idx=db.codes.findIndex(c=>c.id===id); if(idx===-1) return;
+    const ni=idx+dir; if(ni<0||ni>=db.codes.length) return;
+    [db.codes[idx],db.codes[ni]]=[db.codes[ni],db.codes[idx]];
+    saveDB(); renderCodes();
+}
+
+/* =========================================================
+   GROUP CRUD
+========================================================= */
+function newGroup(){
+    if(!currentCode()){ toast(t("needCode")); return; }
+    openModal("group-create", t("newGroup_modal"));
+}
+function editGroup(id){
+    const code=currentCode(); if(!code) return;
+    const group=code.groups.find(g=>g.id===id); if(!group) return;
+    state.editingGroupId = id;
+    openModal("group-edit", t("editGroup_modal"));
+    document.getElementById("modalName").value = group.name;
+    document.getElementById("modalDesc").value = group.description||"";
+    setText("modalConfirmButton", t("modify"));
+}
+function deleteGroup(id){
+    const code=currentCode(); if(!code) return;
+    const group=code.groups.find(g=>g.id===id); if(!group) return;
+    if(!confirm(t("deleteConfirmGroup",group.name,group.articles.length))) return;
+    const idx=code.groups.findIndex(g=>g.id===id);
+    code.groups.splice(idx,1);
+    if(state.groupId===id){
+        const next=code.groups[idx]||code.groups[idx-1]||code.groups[0];
+        state.groupId=next?.id||null; state.articleId=next?.articles[0]?.id||null;
+    }
+    saveDB(); renderAll(); toast(t("groupDeleted"));
+}
+function moveGroup(id, dir){
+    const code=currentCode(); if(!code) return;
+    const idx=code.groups.findIndex(g=>g.id===id); if(idx===-1) return;
+    const ni=idx+dir; if(ni<0||ni>=code.groups.length) return;
+    [code.groups[idx],code.groups[ni]]=[code.groups[ni],code.groups[idx]];
+    saveDB(); renderGroups();
+}
+
+/* =========================================================
+   ARTICLE CRUD
+========================================================= */
+function newArticle(groupId=state.groupId){
+    if(groupId) state.groupId=groupId;
+    const group=currentGroup(); if(!group){ toast(t("needGroup")); return; }
+    saveCurrent(true);
+    const article={ id:uid(), number:"Article "+(group.articles.length+1), title:"", ref:"", html:"<p></p>" };
+    group.articles.push(article);
+    state.articleId=article.id; state.dirty=false;
+    saveDB(); renderAll();
+}
+function setTitleOfArticle(articleId){
+    if(!articleId) return;
+    let newTitle=document.getElementById("articleTitle").value;
+    if(!newTitle.trim()) newTitle=t("untitled");
+    for(const code of db.codes) for(const group of code.groups){
+        const article=group.articles.find(a=>a.id===articleId);
+        if(article){ article.title=newTitle; saveDB(); renderGroups(); return; }
+    }
+}
+function editArticle(groupId,articleId){
+    state.groupId=groupId; state.articleId=articleId;
+    renderAll();
+    setTimeout(()=>document.getElementById("articleTitle").focus(),50);
+}
+function deleteArticle(groupId,articleId){
+    const code=currentCode(); if(!code) return;
+    const group=code.groups.find(g=>g.id===groupId); if(!group) return;
+    const article=group.articles.find(a=>a.id===articleId); if(!article) return;
+    if(!confirm(t("deleteConfirmArticle",article.number||"Article",article.title||t("untitled")))) return;
+    const idx=group.articles.findIndex(a=>a.id===articleId);
+    group.articles.splice(idx,1);
+    if(state.articleId===articleId){
+        const next=group.articles[idx]||group.articles[idx-1]||null;
+        state.articleId=next?.id||null;
+    }
+    saveDB(); renderAll(); toast(t("articleDeleted"));
+}
+function moveArticle(groupId,articleId,dir){
+    const code=currentCode(); if(!code) return;
+    const group=code.groups.find(g=>g.id===groupId); if(!group) return;
+    const idx=group.articles.findIndex(a=>a.id===articleId); if(idx===-1) return;
+    const ni=idx+dir; if(ni<0||ni>=group.articles.length) return;
+    [group.articles[idx],group.articles[ni]]=[group.articles[ni],group.articles[idx]];
+    saveDB(); renderGroups();
+}
+function deleteCurrentArticle(){
+    const article=currentArticle(), group=currentGroup();
+    if(!article||!group) return;
+    deleteArticle(group.id,article.id);
+}
+function moveArticleToGroup(groupId,articleId){
+    const code=currentCode(); if(!code) return;
+    const source=code.groups.find(g=>g.id===groupId); if(!source) return;
+    const article=source.articles.find(a=>a.id===articleId); if(!article) return;
+    state.editingArticleId=articleId; state.groupId=groupId;
+    openModal("article-move", t("moveTitle"));
+    document.getElementById("modalName").value=article.number+" - "+(article.title||t("untitled"));
+    document.getElementById("modalName").disabled=true;
+    document.getElementById("modalDesc").value=t("currentGroup")+" "+source.name;
+    document.getElementById("modalDesc").disabled=true;
+    const select=document.getElementById("moveTarget");
+    select.innerHTML=code.groups.filter(g=>g.id!==groupId)
+        .map(g=>`<option value="${g.id}">${escapeHTML(g.name)}</option>`).join("");
+    document.getElementById("moveArea").style.display="block";
+    setText("modalConfirmButton", t("moveBtn"));
+}
+function confirmArticleMove(){
+    const code=currentCode(); if(!code) return;
+    const source=code.groups.find(g=>g.id===state.groupId);
+    const targetId=document.getElementById("moveTarget").value;
+    const target=code.groups.find(g=>g.id===targetId);
+    if(!source||!target) return;
+    const idx=source.articles.findIndex(a=>a.id===state.editingArticleId); if(idx===-1) return;
+    const article=source.articles.splice(idx,1)[0];
+    target.articles.push(article);
+    state.groupId=target.id; state.articleId=article.id;
+    saveDB(); closeModal(); renderAll(); toast(t("articleMoved"));
+}
+
+/* =========================================================
+   EDITOR
+========================================================= */
+function showEditor(show){
+    document.getElementById("empty").style.display=show?"none":"grid";
+    const ea=document.getElementById("editorArea");
+    ea.style.display=show?"flex":"none";
+    ea.style.flexDirection="column";
+}
+function loadEditor(){
+    const article=currentArticle(), group=currentGroup(), code=currentCode();
+    if(!article||!group||!code){ showEditor(false); return; }
+    showEditor(true);
+    document.getElementById("breadcrumb").textContent=code.name+" / "+group.name+" / "+article.number;
+    document.getElementById("articlePath").textContent=group.name+" — "+code.name;
+    document.getElementById("articleNumber").value=article.number||"";
+    document.getElementById("articleRef").value=article.ref||"";
+    document.getElementById("articleTitle").value=article.title||"";
+    clearTableSelection();
+    document.getElementById("content").innerHTML=ensureParagraphContent(article.html);
+    document.getElementById("status").textContent=state.dirty?t("unsaved"):t("saved");
+}
+
+/* =========================================================
+   SAVE
+========================================================= */
+function markDirty(){
+    state.dirty=true;
+    const s=document.getElementById("status"); if(s) s.textContent=t("unsaved");
+}
+function saveCurrent(silent=false){
+    const article=currentArticle(); if(!article) return;
+    if(!state.dirty&&silent) return;
+    article.number=document.getElementById("articleNumber").value||"Article";
+    article.ref=document.getElementById("articleRef").value;
+    article.title=document.getElementById("articleTitle").value;
+    article.html=ensureParagraphContent(document.getElementById("content").innerHTML);
+    saveDB(); state.dirty=false;
+    if(!silent) toast(t("articleSaved"));
+    const s=document.getElementById("status"); if(s) s.textContent=t("saved");
+}
+
+/* =========================================================
+   MODAL (generic)
+========================================================= */
+function openModal(type, title){
+    state.modalType=type;
+    setText("modalTitle", title);
+    setText("modalNameLabel", t("nameLabel"));
+    setText("modalDescLabel", t("descLabel"));
+    setAttr("modalDesc","placeholder",t("descPh"));
+    document.getElementById("modalName").disabled=false;
+    document.getElementById("modalDesc").disabled=false;
+    document.getElementById("modalName").value="";
+    document.getElementById("modalDesc").value="";
+    document.getElementById("moveArea").style.display="none";
+    setText("modalCancelBtn", t("cancel"));
+    setText("modalConfirmButton", t("create"));
+    document.getElementById("modal").classList.add("visible");
+    setTimeout(()=>document.getElementById("modalName").focus(),50);
+}
+function closeModal(){
+    document.getElementById("modal").classList.remove("visible");
+    state.modalType=null; state.editingCodeId=null; state.editingGroupId=null; state.editingArticleId=null;
+    document.getElementById("modalName").disabled=false;
+    document.getElementById("modalDesc").disabled=false;
+}
+function confirmModal(){
+    if(state.modalType==="article-move"){ confirmArticleMove(); return; }
+    const name=document.getElementById("modalName").value.trim();
+    const description=document.getElementById("modalDesc").value.trim();
+    if(!name){ toast(t("nameRequired")); return; }
+    if(state.modalType==="code-create"){
+        const code={ id:uid(), name, description, groups:[] };
+        db.codes.push(code);
+        state.codeId=code.id; state.groupId=null; state.articleId=null;
+        toast(t("codeCreated"));
+    } else if(state.modalType==="code-edit"){
+        const code=db.codes.find(c=>c.id===state.editingCodeId);
+        if(code){ code.name=name; code.description=description; toast(t("codeEdited")); }
+    } else if(state.modalType==="group-create"){
+        const code=currentCode(); if(!code) return;
+        const group={ id:uid(), name, description, articles:[] };
+        code.groups.push(group);
+        state.groupId=group.id; state.articleId=null;
+        toast(t("groupCreated"));
+    } else if(state.modalType==="group-edit"){
+        const code=currentCode(); if(!code) return;
+        const group=code.groups.find(g=>g.id===state.editingGroupId);
+        if(group){ group.name=name; group.description=description; toast(t("groupEdited")); }
+    }
+    saveDB(); closeModal(); renderAll();
+}
+
+/* =========================================================
+   SETTINGS MODAL
+========================================================= */
+function openSettings(){
+    applyAllTranslations();
+    applyTheme();
+    document.getElementById("settingsModal").classList.add("visible");
+}
+function closeSettings(){ document.getElementById("settingsModal").classList.remove("visible"); }
+
+/* =========================================================
+   TOOLBAR
+========================================================= */
+function cmd(command, value=null){
+    document.execCommand(command, false, value);
+    document.getElementById("content").focus();
+    markDirty(); updateToolbarState();
+}
+function updateToolbarState(){
+    [["toolBold","bold"],["toolItalic","italic"],["toolUnderline","underline"],["toolStrike","strikeThrough"]]
+        .forEach(([id,cmd])=>{
+            const el=document.getElementById(id);
+            if(el) el.classList.toggle("active", document.queryCommandState(cmd));
+        });
+}
+function updateHeadingSelect(){
+    const sel=document.getElementById("headingSelect"); if(!sel) return;
+    const block=document.queryCommandValue("formatBlock").toLowerCase();
+    const val=["h1","h2","h3","h4","h5","h6"].includes(block)?block:"div";
+    if(sel.value!==val) sel.value=val;
+}
+function applyHeading(value){
+    document.execCommand("formatBlock", false, value==="div"?"div":value);
+    document.getElementById("content").focus(); markDirty();
+}
+function insertHR(){
+    document.getElementById("content").focus();
+    document.execCommand("insertHTML", false, "<hr><p><br></p>");
+    markDirty();
+}
+function triggerImageInsert(){ document.getElementById("imgFile").click(); }
+function insertImageBase64(event){
+    const file=event.target.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=function(){
+        document.getElementById("content").focus();
+        document.execCommand("insertHTML", false,
+            `<img src="${reader.result}" alt="${escapeHTML(file.name)}" style="max-width:100%;border-radius:6px;"><p><br></p>`);
+        markDirty();
+    };
+    reader.readAsDataURL(file);
+    event.target.value="";
+}
+
+/* =========================================================
+   CONTENT / TABLES
+========================================================= */
+function ensureParagraphContent(html){
+    const value=String(html||"").trim();
+    if(!value) return "<p><br></p>";
+    const box=document.createElement("div");
+    box.innerHTML=value;
+    if(!box.children.length) return `<p>${box.innerHTML||"<br>"}</p>`;
+    const hasBlock=[...box.children].some(el=>/^(P|DIV|H1|H2|H3|H4|H5|H6|BLOCKQUOTE|UL|OL|TABLE|HR)$/.test(el.tagName));
+    if(!hasBlock) return `<p>${box.innerHTML}</p>`;
+    if(![...box.children].some(el=>el.tagName==="P")) box.insertAdjacentHTML("beforeend","<p><br></p>");
+    return box.innerHTML;
+}
+
+let selectedTable=null;
+function clearTableSelection(){
+    if(selectedTable) selectedTable.classList.remove("table-active");
+    selectedTable=null;
+    document.getElementById("tableTools")?.classList.remove("visible");
+}
+function positionTableTools(){
+    const tools=document.getElementById("tableTools");
+    if(!tools || !selectedTable) return;
+    const r=selectedTable.getBoundingClientRect();
+    tools.style.left=Math.max(8, r.left)+"px";
+    tools.style.top=Math.max(8, r.top-38)+"px";
+    tools.classList.add("visible");
+}
+function selectTable(table){
+    clearTableSelection();
+    selectedTable=table;
+    table.classList.add("table-active");
+    positionTableTools();
+}
+function insertTable(){
+    const content=document.getElementById("content");
+    content.focus();
+    document.execCommand("insertHTML", false,
+        '<table><tbody><tr><th><br></th><th><br></th><th><br></th></tr><tr><td><br></td><td><br></td><td><br></td></tr><tr><td><br></td><td><br></td><td><br></td></tr></tbody></table><p><br></p>');
+    const tables=content.querySelectorAll("table");
+    selectTable(tables[tables.length-1]);
+    markDirty();
+}
+function tableRows(){ return selectedTable ? [...selectedTable.rows] : []; }
+function addTableRow(){
+    if(!selectedTable) return;
+    const cols=selectedTable.rows[0]?.cells.length||1;
+    const tr=selectedTable.insertRow(-1);
+    for(let i=0;i<cols;i++){ const td=tr.insertCell(-1); td.innerHTML="<br>"; }
+    markDirty(); positionTableTools();
+}
+function removeTableRow(){
+    if(!selectedTable || selectedTable.rows.length<=1) return;
+    selectedTable.deleteRow(-1); markDirty(); positionTableTools();
+}
+function addTableColumn(){
+    if(!selectedTable) return;
+    [...selectedTable.rows].forEach(row=>{ const cell=row.insertCell(-1); cell.innerHTML="<br>"; });
+    markDirty(); positionTableTools();
+}
+function removeTableColumn(){
+    if(!selectedTable) return;
+    const rows=selectedTable.rows;
+    const cols=rows[0]?.cells.length||0;
+    if(cols<=1) return;
+    [...rows].forEach(row=>row.deleteCell(-1));
+    markDirty(); positionTableTools();
+}
+function removeSelectedTable(){
+    if(!selectedTable) return;
+    selectedTable.remove();
+    clearTableSelection();
+    markDirty();
+}
+function bindTableInteractions(){
+    const content=document.getElementById("content");
+    if(!content || content.dataset.tableBound) return;
+    content.dataset.tableBound="1";
+    content.addEventListener("click", e=>{
+        const table=e.target.closest("table");
+        if(table) selectTable(table);
+        else if(!e.target.closest("#tableTools")) clearTableSelection();
+    });
+    window.addEventListener("resize", positionTableTools);
+    document.addEventListener("scroll", positionTableTools, true);
+}
+bindTableInteractions();
+
+/* =========================================================
+   EXPORT / IMPORT
+========================================================= */
+function exportData(){
+    saveCurrent(true);
+    const blob=new Blob([JSON.stringify(db,null,4)],{type:"application/json"});
+    const link=document.createElement("a");
+    const url=URL.createObjectURL(blob);
+    link.href=url;
+    const proj=loadProjectsIndex().find(p=>p.id===currentProjectId);
+    link.download="lawsarchitect-"+(proj?.name||"export").replace(/\s+/g,"-").toLowerCase()+".json";
+    link.click(); URL.revokeObjectURL(url); toast(t("exportDone"));
+}
+function importData(event){
+    const file=event.target.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=function(){
+        try{
+            const imported=JSON.parse(reader.result);
+            if(!imported||!Array.isArray(imported.codes)) throw new Error();
+            db=imported;
+            state.codeId=db.codes[0]?.id||null;
+            state.groupId=db.codes[0]?.groups[0]?.id||null;
+            state.articleId=db.codes[0]?.groups[0]?.articles[0]?.id||null;
+            state.dirty=false;
+            saveDB(); renderAll(); toast(t("importDone"));
+        }catch(e){ toast(t("invalidJson")); }
+    };
+    reader.readAsText(file); event.target.value="";
+}
+
+/* =========================================================
+   TOAST
+========================================================= */
+function toast(msg){
+    const el=document.getElementById("toast");
+    el.textContent=msg; el.classList.add("visible");
+    setTimeout(()=>el.classList.remove("visible"),1800);
+}
+
+/* =========================================================
+   KEYBOARD
+========================================================= */
+let hoveredCodeId=null;
+let hoveredArticle={codeId:null,groupId:null,articleId:null};
+let hoveredPanel=null;
+
+function bindNavigationHover(){
+    const codes=document.getElementById("codes");
+    const groups=document.getElementById("groups");
+    if(codes && !codes.dataset.navBound){
+        codes.dataset.navBound="1";
+        codes.addEventListener("mouseover", e=>{
+            const item=e.target.closest(".item");
+            if(item){
+                const id=item.querySelector("[onclick*=\"selectCode\"]")?.getAttribute("onclick")?.match(/selectCode\('([^']+)'\)/)?.[1];
+                if(id){ hoveredPanel="codes"; }
+            }
+        });
+        codes.addEventListener("mouseleave",()=>{ hoveredCodeId=null; if(hoveredPanel==="codes") hoveredPanel=null; });
+    }
+    if(groups && !groups.dataset.navBound){
+        groups.dataset.navBound="1";
+        groups.addEventListener("mouseover", e=>{
+            const article=e.target.closest(".article");
+            if(article){
+                const handler=article.querySelector(".article-main")?.getAttribute("onclick")||"";
+                const m=handler.match(/selectArticle\('([^']+)','([^']+)'\)/);
+                if(m){
+                    // Le survol ne change jamais la position courante.
+                    // Il indique seulement que le panneau des groupes est actif.
+                    hoveredPanel="groups";
+                }
+            } else if(e.target.closest(".group")) {
+                hoveredPanel="groups";
+            }
+        });
+        groups.addEventListener("mouseleave",()=>{ hoveredArticle={codeId:null,groupId:null,articleId:null}; if(hoveredPanel==="groups") hoveredPanel=null; });
+    }
+}
+
+function flatArticles(){
+    return db.codes.flatMap(code=>code.groups.flatMap(group=>group.articles.map(article=>({code,group,article}))));
+}
+
+function focusArticleAt(item){
+    if(!item) return false;
+
+    // Accepte soit {code, group, article}, soit {codeId, groupId, articleId}.
+    const codeId=item.code?.id ?? item.codeId;
+    const groupId=item.group?.id ?? item.groupId;
+    const articleId=item.article?.id ?? item.articleId;
+
+    const code=db.codes.find(c=>c.id===codeId);
+    const group=code?.groups?.find(g=>g.id===groupId);
+    const article=group?.articles?.find(a=>a.id===articleId);
+    if(!code || !group || !article) return false;
+
+    saveCurrent(true);
+    state.codeId=code.id;
+    state.groupId=group.id;
+    state.articleId=article.id;
+    state.dirty=false;
+    hoveredCodeId=code.id;
+    hoveredArticle={codeId:code.id,groupId:group.id,articleId:article.id};
+    renderAll();
+    return true;
+}
+
+function navigateArticles(step){
+    const all=flatArticles();
+    if(!all.length) return;
+
+    // La position de navigation vient toujours de l'article sélectionné,
+    // jamais de l'article simplement survolé.
+    const currentCodeId=state.codeId;
+    const currentGroupId=state.groupId;
+    const currentArticleId=state.articleId;
+
+    // On cherche l'article courant par code + groupe + article,
+    // pas seulement par son id (les ids peuvent être ambigus dans un import).
+    const idx=all.findIndex(x=>
+        x.code.id===currentCodeId &&
+        x.group.id===currentGroupId &&
+        x.article.id===currentArticleId
+    );
+    if(idx<0) return;
+
+    const target=all[idx+step];
+    if(!target) return; // pas de rotation aux extrémités
+
+    focusArticleAt(target);
+}
+
+function navigateGroups(step){
+    // La navigation part toujours du groupe de l'article actuellement sélectionné.
+    const code=db.codes.find(c=>c.id===state.codeId);
+    if(!code?.groups?.length) return;
+
+    const currentGroupId=state.groupId;
+    const gi=code.groups.findIndex(g=>g.id===currentGroupId);
+    if(gi<0) return;
+
+    let targetCode=code;
+    let targetGi=gi+step;
+
+    // On dépasse le dernier groupe : premier groupe du code suivant.
+    if(targetGi>=code.groups.length){
+        const ci=db.codes.findIndex(c=>c.id===code.id);
+        targetCode=db.codes[ci+1];
+        if(!targetCode?.groups?.length) return;
+        targetGi=0;
+    }
+    // On dépasse le premier groupe : dernier groupe du code précédent.
+    else if(targetGi<0){
+        const ci=db.codes.findIndex(c=>c.id===code.id);
+        targetCode=db.codes[ci-1];
+        if(!targetCode?.groups?.length) return;
+        targetGi=targetCode.groups.length-1;
+    }
+
+    const group=targetCode.groups[targetGi];
+    if(!group) return;
+
+    // Dans le sens suivant, on arrive au premier article du groupe.
+    // Dans le sens précédent, au dernier article du groupe.
+    const article=step>0
+        ? group.articles?.[0]
+        : group.articles?.[group.articles.length-1];
+
+    if(!article) return;
+
+    focusArticleAt({
+        codeId:targetCode.id,
+        groupId:group.id,
+        articleId:article.id
+    });
+}
+
+function navigateCodes(step){
+    // Le pointeur ne sert qu'à choisir le panneau qui reçoit les touches.
+    // Le code de départ est toujours celui de l'article actuellement sélectionné.
+    const currentCodeId=state.codeId;
+    const idx=db.codes.findIndex(c=>c.id===currentCodeId);
+    if(idx<0) return;
+
+    const next=db.codes[idx+step];
+    if(!next?.groups?.length) return; // pas de rotation
+
+    // ↓ : premier groupe / premier article du code suivant.
+    // ↑ : dernier groupe / dernier article du code précédent.
+    const group=step>0
+        ? next.groups[0]
+        : next.groups[next.groups.length-1];
+    if(!group?.articles?.length) return;
+
+    const article=step>0
+        ? group.articles[0]
+        : group.articles[group.articles.length-1];
+
+    focusArticleAt({
+        codeId:next.id,
+        groupId:group.id,
+        articleId:article.id
+    });
+}
+
+document.addEventListener("keydown",function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){ e.preventDefault(); saveCurrent(); return; }
+    if(e.key==="Escape"){
+        ["modal","settingsModal","projectModal"].forEach(id=>{
+            if(document.getElementById(id).classList.contains("visible")){
+                if(id==="modal") closeModal();
+                else if(id==="settingsModal") closeSettings();
+                else closeProjectModal();
+            }
+        });
+        clearTableSelection();
+        return;
+    }
+    if(e.key==="Enter"&&document.getElementById("projectModal").classList.contains("visible")){
+        e.preventDefault(); confirmProjectModal(); return;
+    }
+    if(document.querySelector(".modal-background.visible")) return;
+    const tag=document.activeElement?.tagName;
+    const typing=tag==="INPUT"||tag==="TEXTAREA"||document.activeElement?.isContentEditable;
+    if(typing) return;
+    if(hoveredPanel==="groups"){
+        if(e.key==="ArrowUp"){ e.preventDefault(); navigateArticles(-1); }
+        else if(e.key==="ArrowDown"){ e.preventDefault(); navigateArticles(1); }
+        else if(e.key==="ArrowLeft"){ e.preventDefault(); navigateGroups(-1); }
+        else if(e.key==="ArrowRight"){ e.preventDefault(); navigateGroups(1); }
+    } else if(hoveredPanel==="codes"){
+        if(e.key==="ArrowUp"){ e.preventDefault(); navigateCodes(-1); }
+        else if(e.key==="ArrowDown"){ e.preventDefault(); navigateCodes(1); }
+    }
+});
+bindNavigationHover();
+
+window.addEventListener("beforeunload",()=>saveCurrent(true));
+
+/* =========================================================
+   INIT
+========================================================= */
+applyTheme();
+applyAllTranslations();
+buildHeadingSelect();
+bindNavigationHover();
+showHomeScreen();
+</script>
+</body>
+</html>
