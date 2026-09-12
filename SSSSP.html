@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Encodeur / Décodeur de SSSS | five_lives Github</title>
+    <link rel="stylesheet" href="./assets/css/header.css" />
+    <link rel="stylesheet" href="./assets/css/style.css" />
+    <script src="./assets/js/header.js" defer></script>
+    <link rel="shortcut icon" href="./assets/favicon.ico" type="image/x-icon">
+  </head>
+  <body>
+    <div id="header"></div>
+    <div class="wrap">
+      <div class="card">
+        <div>
+          <h1>
+            Encodeur / Décodeur de SSSS (scratch-technoval's Secret Symmetrical
+            System)
+          </h1>
+          <p class="lead">
+            Encode et décode avec un système complexe composé de plusieurs
+            étapes d'encodage.
+          </p>
+        </div>
+        <div class="small">
+          Pas de bibliothèques externes · Fonctionne sans internet
+        </div>
+        <div
+          style="margin-top:18px;display:flex;justify-content:flex-end;gap:8px">
+          <button id="example">Insérer un exemple</button>
+          <button id="download">Télécharger le texte encodé (.txt)</button>
+        </div>
+      </div>
+
+      <main class="grid">
+        <section class="card">
+          <label for="plain">Texte</label>
+          <textarea
+            id="plain"
+            placeholder="Saisissez le texte à encoder ou le texte décodé"></textarea>
+          <div class="controls">
+            <button id="encodeBtn" class="primary">Encoder →</button>
+            <button id="clearPlain">Effacer</button>
+            <button id="copyPlain">Copier</button>
+          </div>
+          <div class="footer">
+            <div class="note">
+              Le texte est traité en Unicode avant encodage.
+            </div>
+            <div id="plainStatus" class="status"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <label for="encoded">Encodé (base64)</label>
+          <textarea
+            id="encoded"
+            placeholder="Collez le payload SSSS+ ici pour décoder"></textarea>
+          <div class="controls">
+            <button id="decodeBtn" class="revprimary">← Décoder</button>
+            <button id="clearEncoded">Effacer</button>
+            <button id="copyEncoded">Copier</button>
+          </div>
+          <div class="footer">
+            <div class="note">
+              Structure: base 64 de [1 caractère][caractère normal][nouvelle
+              ligne][HEX séparé par des virgule].
+            </div>
+            <div id="encodedStatus" class="status"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="footer"></div>
+
+    <script>
+      (() => {
+        const MAX_CP = 0x10FFFF;
+        const SURROGATE_START = 0xD800;
+        const SURROGATE_END = 0xDFFF;
+
+        // Convertit la clé en une suite de décalages Unicode reproductibles.
+        // Ce mécanisme est volontairement simple : SSSS+ n'est pas présenté comme
+        // un chiffrement cryptographique.
+        function keyShifts(key) {
+          const bytes = new TextEncoder().encode(key);
+          if (!bytes.length) throw new Error("clé vide");
+          let a = 0x811c9dc5;
+          let b = 0x9e3779b9;
+          for (const byte of bytes) {
+            a ^= byte;
+            a = Math.imul(a, 0x01000193) >>> 0;
+            b ^= (byte + 0x9d) & 0xff;
+            b = Math.imul(b, 0x85ebca6b) >>> 0;
+            b = ((b << 13) | (b >>> 19)) >>> 0;
+          }
+          const shifts = [];
+          for (let i = 0; i < Math.max(8, bytes.length); i++) {
+            a ^= a >>> 16;
+            a = Math.imul(a, 0x7feb352d) >>> 0;
+            a ^= a >>> 15;
+            a = Math.imul(a, 0x846ca68b) >>> 0;
+            a ^= a >>> 16;
+            b ^= b >>> 16;
+            b = Math.imul(b, 0x21f0aaad) >>> 0;
+            b ^= b >>> 15;
+            shifts.push(((a ^ b) % MAX_CP + MAX_CP) % MAX_CP);
+          }
+          return shifts;
+        }
+
+        function shiftCodePoint(cp, shift) {
+          let out = (cp + shift) % (MAX_CP + 1);
+          // Évite de produire des points de code Unicode réservés aux surrogates.
+          if (out >= SURROGATE_START && out <= SURROGATE_END) {
+            out = SURROGATE_END + 1 + ((out - SURROGATE_START) % (MAX_CP - SURROGATE_END));
+          }
+          return out;
+        }
+
+        function unshiftCodePoint(cp, shift) {
+          let out = (cp - shift) % (MAX_CP + 1);
+          if (out < 0) out += MAX_CP + 1;
+          if (out >= SURROGATE_START && out <= SURROGATE_END) {
+            out = SURROGATE_START - 1 - ((out - SURROGATE_START) % SURROGATE_START);
+          }
+          return out;
+        }
+
+        function encodeText(text, key) {
+          const shifts = keyShifts(key);
+          let out = "";
+          let i = 0;
+          for (const ch of text) {
+            const cp = ch.codePointAt(0);
+            const shifted = shiftCodePoint(cp, shifts[i % shifts.length]);
+            out += String.fromCodePoint(shifted);
+            i++;
+          }
+          const payload = JSON.stringify({
+            v: "SSSS+",
+            shifts: shifts,
+            data: out
+          });
+          return utf8ToBase64(new TextEncoder().encode(payload));
+        }
+
+        function utf8ToBase64(u8) {
+          let binary = "";
+          const chunk = 0x8000;
+          for (let i = 0; i < u8.length; i += chunk) {
+            binary += String.fromCharCode.apply(null, u8.subarray(i, i + chunk));
+          }
+          return btoa(binary);
+        }
+
+        function base64ToUtf8(b64) {
+          const binary = atob(b64);
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+          return bytes;
+        }
+
+        function decodeText(b64, key) {
+          const payload = JSON.parse(new TextDecoder().decode(base64ToUtf8(b64)));
+          if (payload.v !== "SSSS+" || !Array.isArray(payload.shifts) || typeof payload.data !== "string") {
+            throw new Error("payload SSSS+ invalide");
+          }
+
+          const expected = keyShifts(key);
+          if (expected.length !== payload.shifts.length ||
+              expected.some((v, i) => v !== payload.shifts[i])) {
+            throw new Error("clé incorrecte");
+          }
+
+          let out = "";
+          let i = 0;
+          for (const ch of payload.data) {
+            const cp = ch.codePointAt(0);
+            const original = unshiftCodePoint(cp, expected[i % expected.length]);
+            out += String.fromCodePoint(original);
+            i++;
+          }
+          return out;
+        }
+
+        const keyEl = document.getElementById("key");
+        const plainEl = document.getElementById("plain");
+        const encodedEl = document.getElementById("encoded");
+        const encodeBtn = document.getElementById("encodeBtn");
+        const decodeBtn = document.getElementById("decodeBtn");
+        const copyPlain = document.getElementById("copyPlain");
+        const copyEncoded = document.getElementById("copyEncoded");
+        const clearPlain = document.getElementById("clearPlain");
+        const clearEncoded = document.getElementById("clearEncoded");
+        const plainStatus = document.getElementById("plainStatus");
+        const encodedStatus = document.getElementById("encodedStatus");
+        const exampleBtn = document.getElementById("example");
+        const downloadBtn = document.getElementById("download");
+
+        function setStatus(el, msg, ok=true){
+          el.textContent = msg;
+          el.style.color = ok ? "" : "#ff7b7b";
+          setTimeout(()=>{ if (el.textContent === msg) el.textContent = "" }, 5000);
+        }
+
+        encodeBtn.addEventListener("click", ()=>{
+          try{
+            const key = keyEl.value;
+            if (!key) { setStatus(keyStatus, "Clé requise", false); keyEl.focus(); return; }
+            const txt = plainEl.value || "";
+            const out = encodeText(txt, key);
+            encodedEl.value = out;
+            setStatus(plainStatus, "Encoded ✓");
+          }catch(err){
+            setStatus(plainStatus, "Error: " + (err.message || err), false);
+          }
+        });
+
+        decodeBtn.addEventListener("click", ()=>{
+          try{
+            const key = keyEl.value;
+            if (!key) { setStatus(keyStatus, "Clé requise", false); keyEl.focus(); return; }
+            const b64 = encodedEl.value.trim();
+            if (!b64) { setStatus(encodedStatus, "No input", false); return; }
+            const out = decodeText(b64, key);
+            plainEl.value = out;
+            setStatus(encodedStatus, "Decoded ✓");
+          }catch(err){
+            setStatus(encodedStatus, "Error: " + (err.message || err), false);
+          }
+        });
+
+        copyPlain.addEventListener("click", async ()=>{
+          try {
+            await navigator.clipboard.writeText(plainEl.value || "");
+            setStatus(plainStatus, "Copied");
+          } catch(e){
+            setStatus(plainStatus, "Copier failed", false);
+          }
+        });
+        copyEncoded.addEventListener("click", async ()=>{
+          try {
+            await navigator.clipboard.writeText(encodedEl.value || "");
+            setStatus(encodedStatus, "Copied");
+          } catch(e){
+            setStatus(encodedStatus, "Copier failed", false);
+          }
+        });
+
+        clearPlain.addEventListener("click", ()=> plainEl.value = "");
+        clearEncoded.addEventListener("click", ()=> encodedEl.value = "");
+
+        exampleBtn.addEventListener("click", ()=>{
+          plainEl.value = "Hello — exemple: 1234 € ☺";
+          setStatus(plainStatus, "Example inserted");
+        });
+
+        downloadBtn.addEventListener("click", ()=>{
+          const data = encodedEl.value;
+          if (!data) { setStatus(encodedStatus, "Nothing to download", false); return; }
+          const blob = new Blob([data], {type:"text/plain;charset=utf-8"});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "encoded.txt";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          setStatus(encodedStatus, "Downloaded");
+        });
+
+        // keyboard shortcuts
+        document.addEventListener("keydown", (e)=>{
+          if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === "e"){ e.preventDefault(); encodeBtn.click(); }
+          if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === "d"){ e.preventDefault(); decodeBtn.click(); }
+        });
+
+      })();
+    </script>
+  </body>
+</html>
